@@ -489,6 +489,8 @@ typedef void t_CPU_INIT();
 typedef void t_CPU_RESET();
 typedef void t_CPU_BUS_SIZE_CHANGE(int);
 typedef void t_CPU_SWITCH_PM(bool);
+typedef void* t_GET_CPU_exec_1step();
+typedef void t_exec_1step();
 
 extern class memaccessandpt;
 
@@ -498,12 +500,14 @@ struct {
 	bool inuse;
 	void* np21w;
 	t_CPU_GET_REGPTR* CPU_GET_REGPTR = 0;
-	t_CPU_EXECUTE_CC* CPU_EXECUTE_CC = 0;
+	//t_CPU_EXECUTE_CC* CPU_EXECUTE_CC = 0;
+	t_exec_1step* exec_1step = 0;
 	t_CPU_SET_MACTLFC* CPU_SET_MACTLFC = 0;
 	t_CPU_INIT* CPU_INIT = 0;
 	t_CPU_RESET* CPU_RESET = 0;
 	t_CPU_BUS_SIZE_CHANGE* CPU_BUS_SIZE_CHANGE = 0;
 	t_CPU_SWITCH_PM* CPU_SWITCH_PM = 0;
+	//t_GET_CPU_exec_1step* GET_CPU_exec_1step = 0;
 	bool notfirsttime = false;
 	memaccessandpt* memtmp;
 	char* funcofmemaccess;
@@ -588,13 +592,14 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		for (int i = 0; i < EMU_ID_MAX; i++) {
 			emusemaphore[i].inuse = false;
 			emusemaphore[i].np21w = ULLoadLibraryA((char*)modulename4this);
-			emusemaphore[i].CPU_GET_REGPTR = (t_CPU_GET_REGPTR*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_GET_REGPTR");
-			emusemaphore[i].CPU_EXECUTE_CC = (t_CPU_EXECUTE_CC*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_EXECUTE_CC_V2");
+			emusemaphore[i].CPU_GET_REGPTR = (t_CPU_GET_REGPTR*)ULGetProcAddress((char*)emusemaphore[i].np21w,(char*) "CPU_GET_REGPTR");
+			//emusemaphore[i].CPU_EXECUTE_CC = (t_CPU_EXECUTE_CC*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_EXECUTE_CC_V2");
 			emusemaphore[i].CPU_SET_MACTLFC = (t_CPU_SET_MACTLFC*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_SET_MACTLFC");
 			emusemaphore[i].CPU_INIT = (t_CPU_INIT*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_INIT");
 			emusemaphore[i].CPU_RESET = (t_CPU_RESET*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_RESET");
 			emusemaphore[i].CPU_BUS_SIZE_CHANGE = (t_CPU_BUS_SIZE_CHANGE*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_BUS_SIZE_CHANGE");
 			emusemaphore[i].CPU_SWITCH_PM = (t_CPU_SWITCH_PM*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_SWITCH_PM");
+			emusemaphore[i].exec_1step = (t_exec_1step*)(((t_GET_CPU_exec_1step*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"GET_CPU_exec_1step"))());
 			emusemaphore[i].notfirsttime = false;
 			emusemaphore[i].funcofmemaccess = 0;
 		}
@@ -1041,6 +1046,8 @@ public:
 			return (*(UINT32*)(prm_0));
 			break;
 		case 0x23:
+			DWORD * Param;
+			DWORD Func;
 			UINT32 ret = 0;
 			_this->setntc(_this->i386_context);
 			if (prm_0 == 0) {
@@ -1051,7 +1058,7 @@ public:
 				}*/
 				_this->wow64svctype = 1;
 				_this->i386finish = true;
-				_this->i386core->s.remainclock = 0;
+				//_this->i386core->s.remainclock = 0;
 			}
 			else if (prm_0 == 4) {
 				/*UINT32* p = (UINT32*)ULongToPtr(_this->i386_context->Esp);
@@ -1062,11 +1069,11 @@ public:
 				}*/
 				_this->wow64svctype = 2;
 				_this->i386finish = true;
-				_this->i386core->s.remainclock = 0;
+				//_this->i386core->s.remainclock = 0;
 			}
 			else if (prm_0 == 0xe5) {
-				DWORD* Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
-				DWORD Func = *(DWORD*)(_this->i386core->s.cpu_regs.eip.d - 2 - 4);
+				Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
+				Func = *(DWORD*)(_this->i386core->s.cpu_regs.eip.d - 2 - 4);
 				if ((0x80000000 & Func) == 0)
 				{
 					Func = 0x80000000 | (DWORD)GetHookAddress(((char*)((*(DWORD*)(Func + (4 * 0))))), ((char*)((*(DWORD*)(Func + (4 * 1))))));
@@ -1074,6 +1081,20 @@ public:
 				}
 				if (Func != 0x80000000 && Func != 0) {
 					ret = ((func*)(0x7fffffff & Func))(Param);
+				}
+			}
+			else if (prm_0 == 0xe6) {
+				Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
+				Func = *(DWORD*)(_this->i386core->s.cpu_regs.eip.d - 2 - 4);
+				if (Func != 0) {
+					ret = ((func*)(((UINT64)0xffffffff) & Func))(Param);
+				}
+			}
+			else if (prm_0 == 0xe7) {
+				Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
+				UINT64 Func64 = *(UINT64*)(_this->i386core->s.cpu_regs.eip.d - 2 - 8);
+				if (Func64 != 0) {
+					ret = ((func*)(Func64))(Param);
 				}
 			}
 			//_this->i386_context->Eax = ret;
@@ -1097,12 +1118,14 @@ extern "C" {
 	__declspec(dllexport) NTSTATUS WINAPI BTCpuSetContext(HANDLE thread, HANDLE process, void* unknown, I386_CONTEXT* ctx) { return NtSetInformationThread_alternative(thread, ThreadWow64Context, ctx, sizeof(*ctx)); }
 	__declspec(dllexport) void WINAPI BTCpuSimulate(void) {
 		t_CPU_GET_REGPTR* CPU_GET_REGPTR = 0;
-		t_CPU_EXECUTE_CC* CPU_EXECUTE_CC = 0;
+		//t_CPU_EXECUTE_CC* CPU_EXECUTE_CC = 0;
 		t_CPU_SET_MACTLFC* CPU_SET_MACTLFC = 0;
 		t_CPU_INIT* CPU_INIT = 0;
 		t_CPU_RESET* CPU_RESET = 0;
 		t_CPU_BUS_SIZE_CHANGE* CPU_BUS_SIZE_CHANGE = 0;
 		t_CPU_SWITCH_PM* CPU_SWITCH_PM = 0;
+		//t_GET_CPU_exec_1step* GET_CPU_exec_1step = 0;
+		t_exec_1step* exec_1step = 0;
 
 		I386_CONTEXT* wow_context;
 		NTSTATUS ret;
@@ -1132,12 +1155,14 @@ extern "C" {
 			//ULExecDllMain(HM, 1);
 			if (EMU_ID != -1) {
 				CPU_GET_REGPTR = emusemaphore[EMU_ID].CPU_GET_REGPTR;
-				CPU_EXECUTE_CC = emusemaphore[EMU_ID].CPU_EXECUTE_CC;
+				//CPU_EXECUTE_CC = emusemaphore[EMU_ID].CPU_EXECUTE_CC;
 				CPU_SET_MACTLFC = emusemaphore[EMU_ID].CPU_SET_MACTLFC;
 				CPU_INIT = emusemaphore[EMU_ID].CPU_INIT;
 				CPU_RESET = emusemaphore[EMU_ID].CPU_RESET;
 				CPU_BUS_SIZE_CHANGE = emusemaphore[EMU_ID].CPU_BUS_SIZE_CHANGE;
 				CPU_SWITCH_PM = emusemaphore[EMU_ID].CPU_SWITCH_PM;
+				//GET_CPU_exec_1step = emusemaphore[EMU_ID].GET_CPU_exec_1step;
+				exec_1step = emusemaphore[EMU_ID].exec_1step;
 				if (emusemaphore[EMU_ID].notfirsttime == false) {
 					CPU_INIT();
 					CPU_RESET();
@@ -1151,7 +1176,8 @@ extern "C" {
 			}
 			else {
 				CPU_GET_REGPTR = (t_CPU_GET_REGPTR*)ULGetProcAddress((char*)HM, (char*)"CPU_GET_REGPTR");
-				CPU_EXECUTE_CC = (t_CPU_EXECUTE_CC*)ULGetProcAddress((char*)HM, (char*)"CPU_EXECUTE_CC_V2");
+				//CPU_EXECUTE_CC = (t_CPU_EXECUTE_CC*)ULGetProcAddress((char*)HM, (char*)"CPU_EXECUTE_CC_V2");
+				exec_1step = (t_exec_1step*)(((t_GET_CPU_exec_1step*)ULGetProcAddress((char*)HM, (char*)"GET_CPU_exec_1step"))());
 				CPU_SET_MACTLFC = (t_CPU_SET_MACTLFC*)ULGetProcAddress((char*)HM, (char*)"CPU_SET_MACTLFC");
 				CPU_INIT = (t_CPU_INIT*)ULGetProcAddress((char*)HM, (char*)"CPU_INIT");
 				CPU_RESET = (t_CPU_RESET*)ULGetProcAddress((char*)HM, (char*)"CPU_RESET");
@@ -1171,6 +1197,7 @@ extern "C" {
 		}
 
 		if (memtmp == 0) { return; }
+		memtmp->i386core->s.baseclock = 0x7fffffff;
 		memtmp->setctn(wow_context, 1);
 #ifdef _ARM64_
 		/*
@@ -1266,7 +1293,7 @@ extern "C" {
 			}
 		}
 		memtmp->i386finish = false;
-		while (memtmp->i386finish == false) { CPU_EXECUTE_CC(0x7fffffff); }
+		while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
 		//memtmp->setntc(wow_context);
 		UINT8 svctype = memtmp->wow64svctype;
 		if (EMU_ID != -1) {

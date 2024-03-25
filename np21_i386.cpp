@@ -1,4 +1,20 @@
 #include "windows.h"
+/*BOOL APIENTRY DllMain (HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;
+};*/
+
 #ifdef VC_DLL_EXPORTS
 #undef VC_DLL_EXPORTS
 #define VC_DLL_EXPORTS extern "C" __declspec(dllexport)
@@ -938,7 +954,12 @@ int CPU_EXECUTE_CC(int clockcount)
 						INTERRUPT(pic_ack_vector, 0);
 						irq_pending = false;
 						//pic_update();
-					}
+				}
+				else if (irq_pending && CPU_STAT_HLT) {
+					VERBOSE(("interrupt: reset HTL in real mode"));
+					CPU_EIP++;
+					CPU_STAT_HLT = 0;
+				}
 			}
 			dmax86();
 		} while (CPU_REMCLOCK > 0);
@@ -986,6 +1007,8 @@ catch (int e) {
 		return CPU_BASECLOCK - CPU_REMCLOCK;
 #endif
 }
+
+extern "C" __declspec(dllexport) void* GET_CPU_exec_1step() { return &exec_1step; }
 
 extern "C" __declspec(dllexport) int CPU_EXECUTE_CC_V2(int clockcount) {
 	CPU_REMCLOCK = CPU_BASECLOCK = clockcount;
