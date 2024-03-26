@@ -126,7 +126,7 @@ _CPUID(void)
 			CPU_EAX = 0x1;
 			CPU_EBX = 0;
 			CPU_ECX = 0;
-			CPU_EDX = 0x43; // 512KB L2 Cache ‚Ì‚Ó‚è
+			CPU_EDX = 0x43; // 512KB L2 Cache  Ì‚Ó‚ 
 		}else{
 			CPU_EAX = 0;
 			CPU_EBX = 0;
@@ -137,7 +137,7 @@ _CPUID(void)
 		
 	case 0x80000000:
 		CPU_EAX = 0x80000004;
-		if(strncmp(i386cpuid.cpu_vendor, CPU_VENDOR_AMD, 12)==0){ // AMD”»’è
+		if(strncmp(i386cpuid.cpu_vendor, CPU_VENDOR_AMD, 12)==0){ // AMD    
 			CPU_EBX = LOADINTELDWORD(((UINT8*)(i386cpuid.cpu_vendor+0)));
 			CPU_EDX = LOADINTELDWORD(((UINT8*)(i386cpuid.cpu_vendor+4)));
 			CPU_ECX = LOADINTELDWORD(((UINT8*)(i386cpuid.cpu_vendor+8)));
@@ -149,7 +149,7 @@ _CPUID(void)
 		break;
 
 	case 0x80000001:
-		if(strncmp(i386cpuid.cpu_vendor, CPU_VENDOR_AMD, 12)==0){ // AMD”»’è
+		if(strncmp(i386cpuid.cpu_vendor, CPU_VENDOR_AMD, 12)==0){ // AMD    
 			if(i386cpuid.cpu_family >= 6 || (i386cpuid.cpu_family==5 && i386cpuid.cpu_model >= 6)){
 				CPU_EAX = ((i386cpuid.cpu_family+1) << 8) | (i386cpuid.cpu_model << 4) | i386cpuid.cpu_stepping;
 			}else{
@@ -271,6 +271,44 @@ _2byte_ESC32(void)
 	(*insttable_2byte[1][op])();
 #endif
 	//(*insttable_2byte[1][op])();
+}
+
+void
+_3byte_38ESC(void)
+{
+	UINT32 op;
+
+	GET_PCBYTE(op);
+#ifdef USE_SSSE3
+	if(insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
+		(*insttable_3byte660F38_32[op])();
+		return;
+	}else if(insttable_2byte0F38_32[op]){
+		(*insttable_2byte0F38_32[op])();
+		return;
+	}
+#else
+	EXCEPTION(UD_EXCEPTION, 0);
+#endif
+}
+
+void
+_3byte_3AESC(void)
+{
+	UINT32 op;
+
+	GET_PCBYTE(op);
+#ifdef USE_SSSE3
+	if(insttable_3byte660F3A_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
+		(*insttable_3byte660F3A_32[op])();
+		return;
+	}else if(insttable_2byte0F3A_32[op]){
+		(*insttable_2byte0F3A_32[op])();
+		return;
+	}
+#else
+	EXCEPTION(UD_EXCEPTION, 0);
+#endif
 }
 
 void

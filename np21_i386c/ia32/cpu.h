@@ -118,6 +118,7 @@
 #define USE_SSE
 #define USE_SSE2
 #define USE_SSE3
+#define USE_SSSE3
 #define USE_TSC
 #define USE_FASTPAGING
 #define USE_VME
@@ -783,6 +784,12 @@ extern sigjmp_buf	exec_1step_jmpbuf;
 /*				(1 << 30) */
 /*				(1 << 31) */
 
+#if defined(USE_MMX)&&defined(USE_FPU)&&defined(USE_SSE)&&defined(USE_SSE2)&&defined(USE_SSE3)&&defined(USE_SSSE3)
+#define	CPU_FEATURE_ECX_SSSE3_FLAG	CPU_FEATURE_ECX_SSSE3
+#else
+#define	CPU_FEATURE_ECX_SSSE3_FLAG	0
+#endif
+
 #if defined(USE_MMX)&&defined(USE_FPU)&&defined(USE_SSE)&&defined(USE_SSE2)&&defined(USE_SSE3)
 #define	CPU_FEATURE_ECX_SSE3_FLAG	CPU_FEATURE_ECX_SSE3
 #else
@@ -790,7 +797,7 @@ extern sigjmp_buf	exec_1step_jmpbuf;
 #endif
 
 /*  g p ł   @ \ S   */
-#define	CPU_FEATURES_ECX_ALL	(CPU_FEATURE_ECX_SSE3_FLAG)
+#define	CPU_FEATURES_ECX_ALL	(CPU_FEATURE_ECX_SSE3_FLAG|CPU_FEATURE_ECX_SSSE3_FLAG)
 
 #define	CPU_FEATURES_ECX_PENTIUM_4		(CPU_FEATURE_ECX_SSE3)
 #define	CPU_FEATURES_ECX_PENTIUM_M		(0)
