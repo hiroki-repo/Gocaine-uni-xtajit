@@ -1784,9 +1784,9 @@ void (*insttable_2byte[2][256])(void) = {
 		SYSEXIT,
 		undef_op,
 		undef_op,
-		undef_op,		/* 38 */
+		_3byte_38ESC,		/* 38 */
 		undef_op,
-		undef_op,
+		_3byte_3AESC,
 		undef_op,
 		undef_op,
 		undef_op,
