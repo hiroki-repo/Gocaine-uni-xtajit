@@ -575,6 +575,8 @@ void SSE4_1_PEXTRB(void)
 	UINT8 *data1, *data2;
 	int i;
 
+	UINT32 *out;
+
 	UINT32 op;
 	UINT idx, sub;
 
@@ -588,20 +590,10 @@ void SSE4_1_PEXTRB(void)
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	data1 = (UINT8*)(&(FPU_STAT.xmm_reg[idx]));
-	if ((op) >= 0xc0) {
-		data2 = (UINT8*)(&(FPU_STAT.xmm_reg[sub]));
-	} else {
-		maddr = calc_ea_dst((op));
-		*((UINT64*)(data2buf+ 0)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 0);
-		*((UINT64*)(data2buf+ 1)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 8);
-		data2 = data2buf;
-	}
 	GET_PCBYTE((op2));
 	if ((op) >= 0xc0) {
-		data2[0] = data1[op2&0xF];
-		for(i=1;i<16;i++){
-			data2[i] = 0;
-		}
+		out = reg32_b20[op];
+		*out = (UINT32)(data1[op2&0xF]&0xFF);
 	} else {
 		maddr = calc_ea_dst((op));
 		cpu_vmemorywrite_b(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT8)data1[op2&0xF]);
@@ -616,6 +608,8 @@ void SSE4_1_PEXTRW(void)
 	UINT16 *data1, *data2;
 	int i;
 
+	UINT32 *out;
+
 	UINT32 op;
 	UINT idx, sub;
 
@@ -629,23 +623,13 @@ void SSE4_1_PEXTRW(void)
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	data1 = (UINT16*)(&(FPU_STAT.xmm_reg[idx]));
-	if ((op) >= 0xc0) {
-		data2 = (UINT16*)(&(FPU_STAT.xmm_reg[sub]));
-	} else {
-		maddr = calc_ea_dst((op));
-		*((UINT64*)(data2buf+ 0)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 0);
-		*((UINT64*)(data2buf+ 1)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 8);
-		data2 = data2buf;
-	}
 	GET_PCBYTE((op2));
 	if ((op) >= 0xc0) {
-		data2[0] = data1[op2&0x7];
-		for(i=1;i<16;i++){
-			data2[i] = 0;
-		}
+		out = reg32_b20[op];
+		*out = (UINT32)(data1[op2&0x7]&0xFFFF);
 	} else {
 		maddr = calc_ea_dst((op));
-		cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT8)data1[op2&0x7]);
+		cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT16)data1[op2&0x7]);
 	}
 	TRACEOUT(("SSE4_1_PEXTRW"));
 }
@@ -656,6 +640,8 @@ void SSE4_1_PEXTRD(void)
 	UINT32 data2buf[4];
 	UINT32 *data1, *data2;
 	int i;
+
+	UINT32 *out;
 
 	UINT32 op;
 	UINT idx, sub;
@@ -670,23 +656,13 @@ void SSE4_1_PEXTRD(void)
 	idx = (op >> 3) & 7;
 	sub = (op & 7);
 	data1 = (UINT32*)(&(FPU_STAT.xmm_reg[idx]));
-	if ((op) >= 0xc0) {
-		data2 = (UINT32*)(&(FPU_STAT.xmm_reg[sub]));
-	} else {
-		maddr = calc_ea_dst((op));
-		*((UINT64*)(data2buf+ 0)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 0);
-		*((UINT64*)(data2buf+ 1)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 8);
-		data2 = data2buf;
-	}
 	GET_PCBYTE((op2));
 	if ((op) >= 0xc0) {
-		data2[0] = data1[op2&0x3];
-		for(i=1;i<4;i++){
-			data2[i] = 0;
-		}
+		out = reg32_b20[op];
+		*out = (UINT32)(data1[op2&0x3]&0xFFFFFFFF);
 	} else {
 		maddr = calc_ea_dst((op));
-		cpu_vmemorywrite_d(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT8)data1[op2&0x3]);
+		cpu_vmemorywrite_d(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT32)data1[op2&0x3]);
 	}
 	TRACEOUT(("SSE4_1_PEXTRD"));
 }
