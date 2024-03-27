@@ -3138,7 +3138,7 @@ void (*insttable_3byte660F38_32[256])(void) = {
 	SSE4_1_PMOVZXWQ,
 	SSE4_1_PMOVZXDQ,
 	NULL,
-	NULL,
+	SSE4_2_PCMPGTQ,
 	SSE4_1_PMINSB,		/* 38 */
 	SSE4_1_PMINSD,
 	SSE4_1_PMINUW,
@@ -3697,10 +3697,10 @@ void (*insttable_3byte660F3A_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 60 */
-	NULL,
-	NULL,
-	NULL,
+	SSE4_2_PCMPESTRM,		/* 60 */
+	SSE4_2_PCMPESTRI,
+	SSE4_2_PCMPISTRM,
+	SSE4_2_PCMPISTRI,
 	NULL,
 	NULL,
 	NULL,
