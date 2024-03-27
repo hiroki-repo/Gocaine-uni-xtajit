@@ -284,14 +284,14 @@ void SSSE3_PHSUBW(void)
 	UINT16 data2buf[8];
 	UINT16 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
-	data1[0] = data1[1] - data1[0];
-	data1[1] = data1[3] - data1[2];
-	data1[2] = data1[5] - data1[4];
-	data1[3] = data1[7] - data1[6];
-	data1[4] = data2[1] - data2[0];
-	data1[5] = data2[3] - data2[2];
-	data1[6] = data2[5] - data2[4];
-	data1[7] = data2[7] - data2[6];
+	data1[0] = data1[0] - data1[1];
+	data1[1] = data1[2] - data1[3];
+	data1[2] = data1[4] - data1[5];
+	data1[3] = data1[6] - data1[7];
+	data1[4] = data2[0] - data2[1];
+	data1[5] = data2[2] - data2[3];
+	data1[6] = data2[4] - data2[5];
+	data1[7] = data2[6] - data2[7];
 	TRACEOUT(("SSSE3_PHSUBW"));
 }
 
@@ -300,10 +300,10 @@ void SSSE3_PHSUBW_MM(void)
 	UINT16 data2buf[4];
 	UINT16 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
-	data1[0] = data1[1] - data1[0];
-	data1[1] = data1[3] - data1[2];
-	data1[2] = data2[1] - data2[0];
-	data1[3] = data2[3] - data2[2];
+	data1[0] = data1[0] - data1[1];
+	data1[1] = data1[2] - data1[3];
+	data1[2] = data2[0] - data2[1];
+	data1[3] = data2[2] - data2[3];
 	TRACEOUT(("SSSE3_PHSUBW"));
 }
 
@@ -312,10 +312,10 @@ void SSSE3_PHSUBD(void)
 	UINT32 data2buf[4];
 	UINT32 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
-	data1[0] = data1[1] - data1[0];
-	data1[1] = data1[3] - data1[2];
-	data1[2] = data2[1] - data2[0];
-	data1[3] = data2[3] - data2[2];
+	data1[0] = data1[0] - data1[1];
+	data1[1] = data1[2] - data1[3];
+	data1[2] = data2[0] - data2[1];
+	data1[3] = data2[2] - data2[3];
 	TRACEOUT(("SSSE3_PHSUBD"));
 }
 
@@ -324,8 +324,8 @@ void SSSE3_PHSUBD_MM(void)
 	UINT32 data2buf[2];
 	UINT32 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
-	data1[0] = data1[1] - data1[0];
-	data1[1] = data2[1] - data2[0];
+	data1[0] = data1[0] - data1[1];
+	data1[1] = data2[0] - data2[1];
 	TRACEOUT(("SSSE3_PHSUBD"));
 }
 
@@ -335,14 +335,14 @@ void SSSE3_PHSUBSW(void)
 	UINT16 *data1, *data2;
 	INT32 tmpsinedcalc;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
-	tmpsinedcalc = data1[1] - data1[0]; data1[0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data1[3] - data1[2]; data1[1] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data1[5] - data1[4]; data1[2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data1[7] - data1[6]; data1[3] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[1] - data2[0]; data1[4] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[3] - data2[2]; data1[5] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[5] - data2[4]; data1[6] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[7] - data2[6]; data1[7] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[0] - data1[1]; data1[0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[2] - data1[3]; data1[1] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[4] - data1[5]; data1[2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[6] - data1[7]; data1[3] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[0] - data2[1]; data1[4] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[2] - data2[3]; data1[5] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[4] - data2[5]; data1[6] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[6] - data2[7]; data1[7] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	TRACEOUT(("SSSE3_PHSUBSW"));
 }
 
@@ -352,10 +352,10 @@ void SSSE3_PHSUBSW_MM(void)
 	UINT16 *data1, *data2;
 	INT32 tmpsinedcalc;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
-	tmpsinedcalc = data1[1] - data1[0]; data1[0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data1[3] - data1[2]; data1[1] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[1] - data2[0]; data1[2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
-	tmpsinedcalc = data2[3] - data2[2]; data1[3] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[0] - data1[1]; data1[0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data1[2] - data1[3]; data1[1] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[0] - data2[1]; data1[2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	tmpsinedcalc = data2[2] - data2[3]; data1[3] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	TRACEOUT(("SSSE3_PHSUBSW"));
 }
 
@@ -367,11 +367,7 @@ void SSSE3_PSIGNB(void)
 	SINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<16;i++){
-		if (data2[i] < 0){
-			data1[i] = -data1[i];
-		} else if (data2[i] == 0){
-			data1[i] = 0;
-		}
+		data1[i] = (data2[i]<0)?-1:((data2[i]>0)?1:0);
 	}
 	TRACEOUT(("SSSE3_PSIGNB"));
 }
@@ -401,11 +397,7 @@ void SSSE3_PSIGNW(void)
 	SINT16 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<8;i++){
-		if (data2[i] < 0){
-			data1[i] = -data1[i];
-		} else if (data2[i] == 0){
-			data1[i] = 0;
-		}
+		data1[i] = (data2[i]<0)?-1:((data2[i]>0)?1:0);
 	}
 	TRACEOUT(("SSSE3_PSIGNW"));
 }
@@ -435,11 +427,7 @@ void SSSE3_PSIGND(void)
 	SINT32 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<4;i++){
-		if (data2[i] < 0){
-			data1[i] = -data1[i];
-		} else if (data2[i] == 0){
-			data1[i] = 0;
-		}
+		data1[i] = (data2[i]<0)?-1:((data2[i]>0)?1:0);
 	}
 	TRACEOUT(("SSSE3_PSIGND"));
 }
