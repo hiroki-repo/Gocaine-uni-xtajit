@@ -248,6 +248,7 @@ static INLINE UINT32 sse42_compare_string_explicit_len(UINT8 **data1, UINT8 **da
 		if (IntRes2&1){CPU_FLAG |=  O_FLAG;}else{CPU_FLAG &=  ~O_FLAG;}
 		CPU_FLAG &=  ~A_FLAG;
 		CPU_FLAG &=  ~P_FLAG;
+		return IntRes2;
 }
 
 static INLINE UINT32 sse42_compare_string_inplicit_len(UINT8 **data1, UINT8 **data2, UINT8 *data2buf, int cmpmode){
