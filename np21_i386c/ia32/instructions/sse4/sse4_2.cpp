@@ -434,6 +434,8 @@ void SSE4_2_POPCNT_16(void)
 
 	tmp = 0;
 
+	GET_PCBYTE((op));
+
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(21);
 		src = *(reg16_b20[op]);
@@ -479,6 +481,8 @@ void SSE4_2_POPCNT_32(void)
 	UINT32 dst, madr,tmp,src;
 
 	tmp = 0;
+
+	GET_PCBYTE((op));
 
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(21);
