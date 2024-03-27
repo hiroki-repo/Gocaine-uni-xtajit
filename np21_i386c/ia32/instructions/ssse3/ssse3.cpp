@@ -559,41 +559,27 @@ void SSSE3_PABSD_MM(void)
 
 void SSSE3_PALIGNR(void)
 {
+	int i;
+
 	UINT32 op;
 	UINT64 data2buf[2];
 	UINT64 *data1, *data2;
+	union tmp_xmm1 {
+		UINT8 u8_xmm[16];
+		UINT64 u64_xmm[2];
+	};
+	tmp_xmm1 tmp;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	UINT8* data1_8 = (UINT8*)(data1), * data2_8 = (UINT8*)(data2);
 	GET_PCBYTE((op));
-	if (op > 15) {
-		op -= 16;
-		if (op > 15){
-			data1[0] = 0;
-			data1[1] = 0;
-		} else {
-			if (op > 7){
-				data1[0] = data1[1];
-				op -= 8;
-			}
-			op <<= 3;
-			if (op != 0){
-				data1[1] = (data1[1] << op)|(data1[0] >> (64 - op));
-				data1[0] = (data1[0] << op);
-			}
-		}
+	if (op>31){
+		data1[0] = data1[1] = 0;
 	} else {
-		op <<= 3;
-		if (op > 64){
-			op -= 64;
-			data1[0] = (data2[1] >> op)|(data1[0] << (64 - op));
-			data1[1] = (data1[0] >> op)|(data1[1] << (64 - op));
-		} else if (op == 64){
-			data1[0] = data1[1];
-			data1[1] = data2[1];
-		} else if (op != 0){
-			op -= 64;
-			data1[0] = (data2[0] >> op)|(data2[1] << (64 - op));
-			data1[1] = (data2[1] >> op)|(data1[0] << (64 - op));
+		for(i=0;i<16;++i, ++op){
+			tmp.u8_xmm[i] = (op>15)?((op>31)?0:data1_8[op-16]):data2_8[op];
 		}
+		data1[0] = tmp.u64_xmm[0];
+		data1[1] = tmp.u64_xmm[1];
 	}
 	TRACEOUT(("SSSE3_PALIGNR"));
 }
@@ -601,40 +587,22 @@ void SSSE3_PALIGNR(void)
 void SSSE3_PALIGNR_MM(void)
 {
 	UINT32 op;
-	UINT32 data2buf[2];
-	UINT32 *data1, *data2;
+	UINT64 data2buf;
+	UINT64 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	GET_PCBYTE((op));
-	if (op > 7) {
+	if (op>=16){
+		data1[0] = 0;
+	} else if (op>8){
 		op -= 8;
-		if (op > 7){
-			data1[0] = 0;
-			data1[1] = 0;
-		} else {
-			if (op > 3){
-				data1[0] = data1[1];
-				op -= 4;
-			}
-			op <<= 3;
-			if (op != 0){
-				data1[1] = (data1[1] << op)|(data1[0] >> (32 - op));
-				data1[0] = (data1[0] << op);
-			}
-		}
+		data1[0] >>= op*8;
+	} else if (op == 8){
+		// nop
+	} else if (op == 0){
+		data1[0] = data2[0];
 	} else {
-		op <<= 3;
-		if (op > 32){
-			op -= 32;
-			data1[0] = (data2[1] >> op)|(data1[0] << (32 - op));
-			data1[1] = (data1[0] >> op)|(data1[1] << (32 - op));
-		} else if (op == 32){
-			data1[0] = data1[1];
-			data1[1] = data2[1];
-		} else if (op != 0){
-			op -= 32;
-			data1[0] = (data2[0] >> op)|(data2[1] << (32 - op));
-			data1[1] = (data2[1] >> op)|(data1[0] << (32 - op));
-		}
+		data1[0] <<= (8-op)*8;
+		data1[0] |= (data2[0] >> op*8);
 	}
 	TRACEOUT(("SSSE3_PALIGNR"));
 }
