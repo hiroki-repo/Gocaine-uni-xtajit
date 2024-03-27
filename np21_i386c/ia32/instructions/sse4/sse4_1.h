@@ -23,48 +23,60 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	IA32_CPU_INSTRUCTION_SSSE3_SSSE3_H__
-#define	IA32_CPU_INSTRUCTION_SSSE3_SSSE3_H__
+#ifndef	IA32_CPU_INSTRUCTION_SSE4_SSE4_1_H__
+#define	IA32_CPU_INSTRUCTION_SSE4_SSE4_1_H__
 
 //#ifdef __cplusplus
 //extern "C" {
 //#endif
 
-void SSSE3_PSHUFB(void);
-void SSSE3_PSHUFB_MM(void);
-void SSSE3_PHADDW(void);
-void SSSE3_PHADDW_MM(void);
-void SSSE3_PHADDD(void);
-void SSSE3_PHADDD_MM(void);
-void SSSE3_PHADDSW(void);
-void SSSE3_PHADDSW_MM(void);
-void SSSE3_PMADDUBSW(void);
-void SSSE3_PMADDUBSW_MM(void);
-void SSSE3_PHSUBW(void);
-void SSSE3_PHSUBW_MM(void);
-void SSSE3_PHSUBD(void);
-void SSSE3_PHSUBD_MM(void);
-void SSSE3_PHSUBSW(void);
-void SSSE3_PHSUBSW_MM(void);
-void SSSE3_PSIGNB(void);
-void SSSE3_PSIGNB_MM(void);
-void SSSE3_PSIGNW(void);
-void SSSE3_PSIGNW_MM(void);
-void SSSE3_PSIGND(void);
-void SSSE3_PSIGND_MM(void);
-void SSSE3_PMULHRSW(void);
-void SSSE3_PMULHRSW_MM(void);
-void SSSE3_PABSB(void);
-void SSSE3_PABSB_MM(void);
-void SSSE3_PABSW(void);
-void SSSE3_PABSW_MM(void);
-void SSSE3_PABSD(void);
-void SSSE3_PABSD_MM(void);
-void SSSE3_PALIGNR(void);
-void SSSE3_PALIGNR_MM(void);
+void SSE4_1_PBLENDVB(void);
+void SSE4_1_BLENDVPS(void);
+void SSE4_1_BLENDVPD(void);
+void SSE4_1_VPTEST(void);
+void SSE4_1_PMOVSXBW(void);
+void SSE4_1_PMOVSXBD(void);
+void SSE4_1_PMOVSXBQ(void);
+void SSE4_1_PMOVSXWD(void);
+void SSE4_1_PMOVSXWQ(void);
+void SSE4_1_PMOVSXDQ(void);
+void SSE4_1_PMOVZXBW(void);
+void SSE4_1_PMOVZXBD(void);
+void SSE4_1_PMOVZXBQ(void);
+void SSE4_1_PMOVZXWD(void);
+void SSE4_1_PMOVZXWQ(void);
+void SSE4_1_PMOVZXDQ(void);
+void SSE4_1_PMULLD(void);
+void SSE4_1_PHMINPOSUW(void);
+void SSE4_1_PMULDQ(void);
+void SSE4_1_PCMPEQQ(void);
+void SSE4_1_MOVNTDQA(void);
+void SSE4_1_PACKUSDW(void);
+void SSE4_1_PMINSB(void);
+void SSE4_1_PMINSD(void);
+void SSE4_1_PMINUW(void);
+void SSE4_1_PMINUD(void);
+void SSE4_1_PMAXSB(void);
+void SSE4_1_PMAXSD(void);
+void SSE4_1_PMAXUW(void);
+void SSE4_1_PMAXUD(void);
+void SSE4_1_PEXTRB(void);
+void SSE4_1_PEXTRW(void);
+void SSE4_1_PEXTRD(void);
+void SSE4_1_PEXTRACTPS(void);
+void SSE4_1_DPPS(void);
+void SSE4_1_DPPD(void);
+void SSE4_1_MPSADBW(void);
+void SSE4_1_ROUNDPS(void);
+void SSE4_1_ROUNDPD(void);
+void SSE4_1_ROUNDSS(void);
+void SSE4_1_ROUNDSD(void);
+void SSE4_1_PBLENDPS(void);
+void SSE4_1_PBLENDPD(void);
+void SSE4_1_PBLENDW(void);
 
 //#ifdef __cplusplus
 //}
 //#endif
 
-#endif	/* IA32_CPU_INSTRUCTION_SSSE3_SSSE3_H__ */
+#endif	/* IA32_CPU_INSTRUCTION_SSE4_SSE4_1_H__ */

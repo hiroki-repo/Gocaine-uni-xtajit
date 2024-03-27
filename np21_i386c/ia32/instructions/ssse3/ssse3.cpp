@@ -44,7 +44,7 @@
 
 static INLINE void
 SSSE3_check_NM_EXCEPTION(){
-	// SSE3 Ȃ  Ȃ UD(     I y R [ h  O) 𔭐       
+	// SSSE3 Ȃ  Ȃ UD(     I y R [ h  O) 𔭐       
 	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)){
 		EXCEPTION(UD_EXCEPTION, 0);
 	}
@@ -149,6 +149,7 @@ void SSSE3_PSHUFB(void)
 			data1[i] = data2buf[data2[i]&7];
 		}
 	}
+	TRACEOUT(("SSSE3_PSHUFB"));
 }
 
 void SSSE3_PSHUFB_MM(void)
@@ -165,6 +166,7 @@ void SSSE3_PSHUFB_MM(void)
 			data1[i] = data2buf[data2[i]&7];
 		}
 	}
+	TRACEOUT(("SSSE3_PSHUFB"));
 }
 
 void SSSE3_PHADDW(void)
@@ -180,6 +182,7 @@ void SSSE3_PHADDW(void)
 	data1[5] = data2[3] + data2[2];
 	data1[6] = data2[5] + data2[4];
 	data1[7] = data2[7] + data2[6];
+	TRACEOUT(("SSSE3_PHADDW"));
 }
 
 void SSSE3_PHADDW_MM(void)
@@ -191,6 +194,7 @@ void SSSE3_PHADDW_MM(void)
 	data1[1] = data1[3] + data1[2];
 	data1[2] = data2[1] + data2[0];
 	data1[3] = data2[3] + data2[2];
+	TRACEOUT(("SSSE3_PHADDW"));
 }
 
 void SSSE3_PHADDD(void)
@@ -202,6 +206,7 @@ void SSSE3_PHADDD(void)
 	data1[1] = data1[3] + data1[2];
 	data1[2] = data2[1] + data2[0];
 	data1[3] = data2[3] + data2[2];
+	TRACEOUT(("SSSE3_PHADDD"));
 }
 
 void SSSE3_PHADDD_MM(void)
@@ -211,62 +216,67 @@ void SSSE3_PHADDD_MM(void)
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	data1[0] = data1[1] + data1[0];
 	data1[1] = data2[1] + data2[0];
+	TRACEOUT(("SSSE3_PHADDD"));
 }
 
 void SSSE3_PHADDSW(void)
 {
 	int i;
 
-	INT16 data2buf[8];
-	INT16 *data1, *data2;
-	INT32 tmpsinedcalc;
+	SINT16 data2buf[8];
+	SINT16 *data1, *data2;
+	SINT32 tmpsinedcalc;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<4;i++){
 		tmpsinedcalc = data1[i * 2 + 0] + data1[i * 2 + 1]; data1[i + 0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 		tmpsinedcalc = data2[i * 2 + 0] + data2[i * 2 + 1]; data1[i + 4] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	}
+	TRACEOUT(("SSSE3_PHADDSW"));
 }
 
 void SSSE3_PHADDSW_MM(void)
 {
 	int i;
 
-	INT16 data2buf[4];
-	INT16 *data1, *data2;
-	INT32 tmpsinedcalc;
+	SINT16 data2buf[4];
+	SINT16 *data1, *data2;
+	SINT32 tmpsinedcalc;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<2;i++){
 		tmpsinedcalc = data1[i * 2 + 0] + data1[i * 2 + 1]; data1[i + 0] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 		tmpsinedcalc = data2[i * 2 + 0] + data2[i * 2 + 1]; data1[i + 2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	}
+	TRACEOUT(("SSSE3_PHADDSW"));
 }
 
 void SSSE3_PMADDUBSW(void)
 {
 	int i;
 
-	INT16 data2buf[8];
-	INT16 *data1, *data2;
-	INT32 tmpsinedcalc;
+	SINT16 data2buf[8];
+	SINT16 *data1, *data2;
+	SINT32 tmpsinedcalc;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<8;i++){
 		tmpsinedcalc = (INT32)(data1[i * 2 + 0]) * data2[i * 2 + 0] + (INT32)(data1[i * 2 + 1]) * data2[i * 2 + 1];
 		data1[i] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	}
+	TRACEOUT(("SSSE3_PMADDUBSW"));
 }
 
 void SSSE3_PMADDUBSW_MM(void)
 {
 	int i;
 
-	INT16 data2buf[4];
-	INT16 *data1, *data2;
-	INT32 tmpsinedcalc;
+	SINT16 data2buf[4];
+	SINT16 *data1, *data2;
+	SINT32 tmpsinedcalc;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<4;i++){
 		tmpsinedcalc = (INT32)(data1[i * 2 + 0]) * data2[i * 2 + 0] + (INT32)(data1[i * 2 + 1]) * data2[i * 2 + 1];
 		data1[i] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	}
+	TRACEOUT(("SSSE3_PMADDUBSW"));
 }
 
 void SSSE3_PHSUBW(void)
@@ -282,6 +292,7 @@ void SSSE3_PHSUBW(void)
 	data1[5] = data2[3] - data2[2];
 	data1[6] = data2[5] - data2[4];
 	data1[7] = data2[7] - data2[6];
+	TRACEOUT(("SSSE3_PHSUBW"));
 }
 
 void SSSE3_PHSUBW_MM(void)
@@ -293,6 +304,7 @@ void SSSE3_PHSUBW_MM(void)
 	data1[1] = data1[3] - data1[2];
 	data1[2] = data2[1] - data2[0];
 	data1[3] = data2[3] - data2[2];
+	TRACEOUT(("SSSE3_PHSUBW"));
 }
 
 void SSSE3_PHSUBD(void)
@@ -304,6 +316,7 @@ void SSSE3_PHSUBD(void)
 	data1[1] = data1[3] - data1[2];
 	data1[2] = data2[1] - data2[0];
 	data1[3] = data2[3] - data2[2];
+	TRACEOUT(("SSSE3_PHSUBD"));
 }
 
 void SSSE3_PHSUBD_MM(void)
@@ -313,6 +326,7 @@ void SSSE3_PHSUBD_MM(void)
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	data1[0] = data1[1] - data1[0];
 	data1[1] = data2[1] - data2[0];
+	TRACEOUT(("SSSE3_PHSUBD"));
 }
 
 void SSSE3_PHSUBSW(void)
@@ -329,6 +343,7 @@ void SSSE3_PHSUBSW(void)
 	tmpsinedcalc = data2[3] - data2[2]; data1[5] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	tmpsinedcalc = data2[5] - data2[4]; data1[6] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	tmpsinedcalc = data2[7] - data2[6]; data1[7] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	TRACEOUT(("SSSE3_PHSUBSW"));
 }
 
 void SSSE3_PHSUBSW_MM(void)
@@ -341,14 +356,15 @@ void SSSE3_PHSUBSW_MM(void)
 	tmpsinedcalc = data1[3] - data1[2]; data1[1] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	tmpsinedcalc = data2[1] - data2[0]; data1[2] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
 	tmpsinedcalc = data2[3] - data2[2]; data1[3] = (tmpsinedcalc>32767)?32767:(((tmpsinedcalc)<-32768)?-32768:tmpsinedcalc);
+	TRACEOUT(("SSSE3_PHSUBSW"));
 }
 
 void SSSE3_PSIGNB(void)
 {
 	int i;
 
-	INT8 data2buf[16];
-	INT8 *data1, *data2;
+	SINT8 data2buf[16];
+	SINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<16;i++){
 		if (data2[i] < 0){
@@ -357,14 +373,15 @@ void SSSE3_PSIGNB(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGNB"));
 }
 
 void SSSE3_PSIGNB_MM(void)
 {
 	int i;
 
-	INT8 data2buf[8];
-	INT8 *data1, *data2;
+	SINT8 data2buf[8];
+	SINT8 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<8;i++){
 		if (data2[i] < 0){
@@ -373,14 +390,15 @@ void SSSE3_PSIGNB_MM(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGNB"));
 }
 
 void SSSE3_PSIGNW(void)
 {
 	int i;
 
-	INT16 data2buf[8];
-	INT16 *data1, *data2;
+	SINT16 data2buf[8];
+	SINT16 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<8;i++){
 		if (data2[i] < 0){
@@ -389,14 +407,15 @@ void SSSE3_PSIGNW(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGNW"));
 }
 
 void SSSE3_PSIGNW_MM(void)
 {
 	int i;
 
-	INT16 data2buf[4];
-	INT16 *data1, *data2;
+	SINT16 data2buf[4];
+	SINT16 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<4;i++){
 		if (data2[i] < 0){
@@ -405,14 +424,15 @@ void SSSE3_PSIGNW_MM(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGNW"));
 }
 
 void SSSE3_PSIGND(void)
 {
 	int i;
 
-	INT32 data2buf[4];
-	INT32 *data1, *data2;
+	SINT32 data2buf[4];
+	SINT32 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<4;i++){
 		if (data2[i] < 0){
@@ -421,14 +441,15 @@ void SSSE3_PSIGND(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGND"));
 }
 
 void SSSE3_PSIGND_MM(void)
 {
 	int i;
 
-	INT32 data2buf[2];
-	INT32 *data1, *data2;
+	SINT32 data2buf[2];
+	SINT32 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<2;i++){
 		if (data2[i] < 0){
@@ -437,106 +458,115 @@ void SSSE3_PSIGND_MM(void)
 			data1[i] = 0;
 		}
 	}
+	TRACEOUT(("SSSE3_PSIGND"));
 }
 
 void SSSE3_PMULHRSW(void)
 {
 	int i;
 
-	INT16 data2buf[8];
-	INT16 *data1, *data2;
+	SINT16 data2buf[8];
+	SINT16 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
-	INT32 tmpsinedcalc;
+	SINT32 tmpsinedcalc;
 	for(i=0;i<8;i++){
 		tmpsinedcalc = ((((INT32)(data1[i])*(INT32)(data2[i]))>>14) + 1)>>1;
 		data1[i] = tmpsinedcalc&0xffff;
 	}
+	TRACEOUT(("SSSE3_PMULHRSW"));
 }
 
 void SSSE3_PMULHRSW_MM(void)
 {
 	int i;
 
-	INT16 data2buf[4];
-	INT16 *data1, *data2;
+	SINT16 data2buf[4];
+	SINT16 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
-	INT32 tmpsinedcalc;
+	SINT32 tmpsinedcalc;
 	for(i=0;i<4;i++){
 		tmpsinedcalc = ((((INT32)(data1[i])*(INT32)(data2[i]))>>14) + 1)>>1;
 		data1[i] = tmpsinedcalc&0xffff;
 	}
+	TRACEOUT(("SSSE3_PMULHRSW"));
 }
 
 void SSSE3_PABSB(void)
 {
 	int i;
 
-	INT8 data2buf[16];
-	INT8 *data1, *data2;
+	SINT8 data2buf[16];
+	SINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<16;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSB"));
 }
 
 void SSSE3_PABSB_MM(void)
 {
 	int i;
 
-	INT8 data2buf[8];
-	INT8 *data1, *data2;
+	SINT8 data2buf[8];
+	SINT8 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<8;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSB"));
 }
 
 void SSSE3_PABSW(void)
 {
 	int i;
 
-	INT16 data2buf[8];
-	INT16 *data1, *data2;
+	SINT16 data2buf[8];
+	SINT16 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<8;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSW"));
 }
 
 void SSSE3_PABSW_MM(void)
 {
 	int i;
 
-	INT16 data2buf[4];
-	INT16 *data1, *data2;
+	SINT16 data2buf[4];
+	SINT16 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<4;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSW"));
 }
 
 void SSSE3_PABSD(void)
 {
 	int i;
 
-	INT32 data2buf[4];
-	INT32 *data1, *data2;
+	SINT32 data2buf[4];
+	SINT32 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<4;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSD"));
 }
 
 void SSSE3_PABSD_MM(void)
 {
 	int i;
 
-	INT32 data2buf[2];
-	INT32 *data1, *data2;
+	SINT32 data2buf[2];
+	SINT32 *data1, *data2;
 	MMX_PART_GETDATA1DATA2_PD((float**)(&data1), (float**)(&data2), (float*)data2buf);
 	for(i=0;i<2;i++){
 		data1[i] = abs(data2[i]);
 	}
+	TRACEOUT(("SSSE3_PABSD"));
 }
 
 void SSSE3_PALIGNR(void)
@@ -577,6 +607,7 @@ void SSSE3_PALIGNR(void)
 			data1[1] = (data2[1] >> op)|(data1[0] << (64 - op));
 		}
 	}
+	TRACEOUT(("SSSE3_PALIGNR"));
 }
 
 void SSSE3_PALIGNR_MM(void)
@@ -617,6 +648,7 @@ void SSSE3_PALIGNR_MM(void)
 			data1[1] = (data2[1] >> op)|(data1[0] << (32 - op));
 		}
 	}
+	TRACEOUT(("SSSE3_PALIGNR"));
 }
 
 #else

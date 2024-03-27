@@ -278,14 +278,20 @@ _3byte_38ESC(void)
 {
 	UINT32 op;
 
-	GET_PCBYTE(op);
 #ifdef USE_SSSE3
-	if(insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
-		(*insttable_3byte660F38_32[op])();
-		return;
-	}else if(insttable_2byte0F38_32[op]){
-		(*insttable_2byte0F38_32[op])();
-		return;
+	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)){
+		EXCEPTION(UD_EXCEPTION, 0);
+	} else {
+		GET_PCBYTE(op);
+		if(insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
+			(*insttable_3byte660F38_32[op])();
+			return;
+		}else if(insttable_2byte0F38_32[op]){
+			(*insttable_2byte0F38_32[op])();
+			return;
+		}else{
+			EXCEPTION(UD_EXCEPTION, 0);
+		}
 	}
 #else
 	EXCEPTION(UD_EXCEPTION, 0);
@@ -297,14 +303,20 @@ _3byte_3AESC(void)
 {
 	UINT32 op;
 
-	GET_PCBYTE(op);
 #ifdef USE_SSSE3
-	if(insttable_3byte660F3A_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
-		(*insttable_3byte660F3A_32[op])();
-		return;
-	}else if(insttable_2byte0F3A_32[op]){
-		(*insttable_2byte0F3A_32[op])();
-		return;
+	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)){
+		EXCEPTION(UD_EXCEPTION, 0);
+	} else {
+		GET_PCBYTE(op);
+		if(insttable_3byte660F3A_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
+			(*insttable_3byte660F3A_32[op])();
+			return;
+		}else if(insttable_2byte0F3A_32[op]){
+			(*insttable_2byte0F3A_32[op])();
+			return;
+		}else{
+			EXCEPTION(UD_EXCEPTION, 0);
+		}
 	}
 #else
 	EXCEPTION(UD_EXCEPTION, 0);

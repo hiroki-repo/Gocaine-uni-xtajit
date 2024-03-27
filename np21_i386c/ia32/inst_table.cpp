@@ -49,6 +49,7 @@
 #include "instructions/sse2/sse2.h"
 #include "instructions/sse3/sse3.h"
 #include "instructions/ssse3/ssse3.h"
+#include "instructions/sse4/sse4_1.h"
 
 /*
  * UNDEF OP
@@ -3097,14 +3098,14 @@ void (*insttable_3byte660F38_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 10 */
+	SSE4_1_PBLENDVB,		/* 10 */
 	NULL,
 	NULL,
 	NULL,
+	SSE4_1_BLENDVPS,
+	SSE4_1_BLENDVPD,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
+	SSE4_1_VPTEST,
 	NULL,		/* 18 */
 	NULL,
 	NULL,
@@ -3113,40 +3114,40 @@ void (*insttable_3byte660F38_32[256])(void) = {
 	SSSE3_PABSW,
 	SSSE3_PABSD,
 	NULL,
-	NULL,		/* 20 */
+	SSE4_1_PMOVSXBW,		/* 20 */
+	SSE4_1_PMOVSXBD,
+	SSE4_1_PMOVSXBQ,
+	SSE4_1_PMOVSXWD,
+	SSE4_1_PMOVSXWQ,
+	SSE4_1_PMOVSXDQ,
+	NULL,
+	NULL,
+	SSE4_1_PMULDQ,		/* 28 */
+	SSE4_1_PCMPEQQ,
+	SSE4_1_MOVNTDQA,
+	SSE4_1_PACKUSDW,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
+	SSE4_1_PMOVZXBW,		/* 30 */
+	SSE4_1_PMOVZXBD,
+	SSE4_1_PMOVZXBQ,
+	SSE4_1_PMOVZXWD,
+	SSE4_1_PMOVZXWQ,
+	SSE4_1_PMOVZXDQ,
 	NULL,
 	NULL,
-	NULL,
-	NULL,		/* 28 */
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,		/* 30 */
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,		/* 38 */
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,		/* 40 */
-	NULL,
+	SSE4_1_PMINSB,		/* 38 */
+	SSE4_1_PMINSD,
+	SSE4_1_PMINUW,
+	SSE4_1_PMINUD,
+	SSE4_1_PMAXSB,
+	SSE4_1_PMAXSD,
+	SSE4_1_PMAXUW,
+	SSE4_1_PMAXUD,
+	SSE4_1_PMULLD,		/* 40 */
+	SSE4_1_PHMINPOSUW,
 	NULL,
 	NULL,
 	NULL,
@@ -3607,22 +3608,22 @@ void (*insttable_3byte660F3A_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 08 */
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
+	SSE4_1_ROUNDPS,		/* 08 */
+	SSE4_1_ROUNDPD,
+	SSE4_1_ROUNDSS,
+	SSE4_1_ROUNDSD,
+	SSE4_1_PBLENDPS,
+	SSE4_1_PBLENDPD,
+	SSE4_1_PBLENDW,
 	SSSE3_PALIGNR,
 	NULL,		/* 10 */
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
+	SSE4_1_PEXTRB,
+	SSE4_1_PEXTRW,
+	SSE4_1_PEXTRD,
+	SSE4_1_PEXTRACTPS,
 	NULL,		/* 18 */
 	NULL,
 	NULL,
@@ -3663,9 +3664,9 @@ void (*insttable_3byte660F3A_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 40 */
-	NULL,
-	NULL,
+	SSE4_1_DPPS,		/* 40 */
+	SSE4_1_DPPD,
+	SSE4_1_MPSADBW,
 	NULL,
 	NULL,
 	NULL,
