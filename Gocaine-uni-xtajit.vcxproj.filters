@@ -158,5 +158,8 @@
     <ClCompile Include="np21_i386c\ia32\instructions\sse4\sse4_1.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="np21_i386c\ia32\instructions\sse4\sse4_2.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
