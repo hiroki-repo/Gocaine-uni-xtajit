@@ -286,6 +286,37 @@ _3byte_38ESC(void)
 		if(insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
 			(*insttable_3byte660F38_32[op])();
 			return;
+		}else if(insttable_3byteF20F38_32[op] && CPU_INST_REPUSE == 0xf2){
+			(*insttable_3byteF20F38_32[op])();
+			return;
+		}else if(insttable_2byte0F38_32[op]){
+			(*insttable_2byte0F38_32[op])();
+			return;
+		}else{
+			EXCEPTION(UD_EXCEPTION, 0);
+		}
+	}
+#else
+	EXCEPTION(UD_EXCEPTION, 0);
+#endif
+}
+
+void
+_3byte_38ESC_16(void)
+{
+	UINT32 op;
+
+#ifdef USE_SSSE3
+	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)){
+		EXCEPTION(UD_EXCEPTION, 0);
+	} else {
+		GET_PCBYTE(op);
+		if(insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32){
+			(*insttable_3byte660F38_32[op])();
+			return;
+		}else if(insttable_3byteF20F38_16[op] && CPU_INST_REPUSE == 0xf2){
+			(*insttable_3byteF20F38_16[op])();
+			return;
 		}else if(insttable_2byte0F38_32[op]){
 			(*insttable_2byte0F38_32[op])();
 			return;
