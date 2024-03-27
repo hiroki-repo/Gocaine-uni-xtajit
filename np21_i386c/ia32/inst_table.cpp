@@ -3633,9 +3633,9 @@ void (*insttable_3byte660F3A_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 20 */
-	NULL,
-	NULL,
+	SSE4_1_PINSRB,		/* 20 */
+	SSE4_1_INSERTPS,
+	SSE4_1_PINSRD,
 	NULL,
 	NULL,
 	NULL,

@@ -121,6 +121,29 @@ static INLINE void SSE_PART_GETDATA1DATA2_PD_UINT64(UINT64 **data1, UINT64 **dat
 	SSE_PART_GETDATA1DATA2_PD((double**)data1, (double**)data2, (double*)data2buf);
 }
 
+static INLINE UINT32 SSE_PART_GETDATA1DATA2_PD_MODRM(double **data1, double **data2, double *data2buf){
+	UINT32 op;
+	UINT idx, sub;
+	
+	SSE4_1_check_NM_EXCEPTION();
+	SSE4_1_setTag();
+	CPU_SSSE3WORKCLOCK;
+	GET_PCBYTE((op));
+	idx = (op >> 3) & 7;
+	sub = (op & 7);
+	*data1 = (double*)(&(FPU_STAT.xmm_reg[idx]));
+	if ((op) >= 0xc0) {
+		*data2 = (double*)(&(FPU_STAT.xmm_reg[sub]));
+	} else {
+		UINT32 maddr;
+		maddr = calc_ea_dst((op));
+		*((UINT64*)(data2buf+ 0)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 0);
+		*((UINT64*)(data2buf+ 1)) = cpu_vmemoryread_q(CPU_INST_SEGREG_INDEX, maddr+ 8);
+		*data2 = data2buf;
+	}
+	return op;
+}
+
 static INLINE void MMX_PART_GETDATA1DATA2_PD(float **data1, float **data2, float *data2buf){
 	UINT32 op;
 	UINT idx, sub;
@@ -667,6 +690,105 @@ void SSE4_1_PEXTRD(void)
 	TRACEOUT(("SSE4_1_PEXTRD"));
 }
 
+void SSE4_1_PINSRB(void)
+{
+	UINT32 op2;
+	UINT8 data2buf[16];
+	UINT8 *data1, *data2;
+	int i;
+
+	UINT32 *out;
+
+	UINT32 op;
+	UINT idx, sub;
+
+	UINT32 maddr;
+
+	
+	SSE4_1_check_NM_EXCEPTION();
+	SSE4_1_setTag();
+	CPU_SSSE3WORKCLOCK;
+	GET_PCBYTE((op));
+	idx = (op >> 3) & 7;
+	sub = (op & 7);
+	data1 = (UINT8*)(&(FPU_STAT.xmm_reg[idx]));
+	GET_PCBYTE((op2));
+	if ((op) >= 0xc0) {
+		out = reg32_b20[op];
+		data1[op2&0xF] = *out;
+	} else {
+		maddr = calc_ea_dst((op));
+		data1[op2&0xF] = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, maddr+ 0);
+	}
+	TRACEOUT(("SSE4_1_PINSRB"));
+}
+
+void SSE4_1_PINSRW(void)
+{
+	UINT32 op2;
+	UINT16 data2buf[8];
+	UINT16 *data1, *data2;
+	int i;
+
+	UINT32 *out;
+
+	UINT32 op;
+	UINT idx, sub;
+
+	UINT32 maddr;
+
+	
+	SSE4_1_check_NM_EXCEPTION();
+	SSE4_1_setTag();
+	CPU_SSSE3WORKCLOCK;
+	GET_PCBYTE((op));
+	idx = (op >> 3) & 7;
+	sub = (op & 7);
+	data1 = (UINT16*)(&(FPU_STAT.xmm_reg[idx]));
+	GET_PCBYTE((op2));
+	if ((op) >= 0xc0) {
+		out = reg32_b20[op];
+		data1[op2&0x7] = *out;
+	} else {
+		maddr = calc_ea_dst((op));
+		data1[op2&0x7] = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, maddr+ 0);
+	}
+	TRACEOUT(("SSE4_1_PINSRW"));
+}
+
+void SSE4_1_PINSRD(void)
+{
+	UINT32 op2;
+	UINT32 data2buf[4];
+	UINT32 *data1, *data2;
+	int i;
+
+	UINT32 *out;
+
+	UINT32 op;
+	UINT idx, sub;
+
+	UINT32 maddr;
+
+	
+	SSE4_1_check_NM_EXCEPTION();
+	SSE4_1_setTag();
+	CPU_SSSE3WORKCLOCK;
+	GET_PCBYTE((op));
+	idx = (op >> 3) & 7;
+	sub = (op & 7);
+	data1 = (UINT32*)(&(FPU_STAT.xmm_reg[idx]));
+	GET_PCBYTE((op2));
+	if ((op) >= 0xc0) {
+		out = reg32_b20[op];
+		data1[op2&0x3] = *out;
+	} else {
+		maddr = calc_ea_dst((op));
+		data1[op2&0x3] = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, maddr+ 0);
+	}
+	TRACEOUT(("SSE4_1_PINSRD"));
+}
+
 void SSE4_1_PEXTRACTPS(void)
 {
 	UINT32 op2;
@@ -704,6 +826,25 @@ void SSE4_1_PEXTRACTPS(void)
 		cpu_vmemorywrite_d(CPU_INST_SEGREG_INDEX, maddr+ 0, (UINT32)(data2[op2&0x3] & 0xFFFFFFFF));
 	}
 	TRACEOUT(("SSE4_1_PEXTRACTPS"));
+}
+
+void SSE4_1_INSERTPS(void)
+{
+	int i;
+
+	UINT32 data2buf[4];
+	UINT32 *data1, *data2;
+	UINT32 op;
+	UINT32 tmp = SSE_PART_GETDATA1DATA2_PD_MODRM((double**)(&data1), (double**)(&data2), (double*)data2buf);
+
+	GET_PCBYTE((op));
+	data1[(op>>4)&3] = data2[(tmp >= 0xc0) ? ((op>>6)&3) : 0];
+	for(i=0;i<4;i++){
+		if (op & (1 << i)){
+			data1[i] = 0;
+		}
+	}
+	TRACEOUT(("SSE4_1_INSERTPS"));
 }
 
 void SSE4_1_DPPS(void)
@@ -1104,7 +1245,27 @@ void SSE4_1_PEXTRD(void)
 	EXCEPTION(UD_EXCEPTION, 0);
 }
 
+void SSE4_1_PINSRB(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void SSE4_1_PINSRW(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void SSE4_1_PINSRD(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
 void SSE4_1_PEXTRACTPS(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void SSE4_1_INSERTPS(void)
 {
 	EXCEPTION(UD_EXCEPTION, 0);
 }
