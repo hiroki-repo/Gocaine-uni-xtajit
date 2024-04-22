@@ -397,6 +397,7 @@ void SSE4_2_CRC32_Gy_Eb(void)
 			data1[0] = (data1[0] >> 1);
 		}
 	}
+	TRACEOUT(("SSE4_2_CRC32_Gy_Eb"));
 }
 
 void SSE4_2_CRC32_Gy_Ev(void)
@@ -417,6 +418,7 @@ void SSE4_2_CRC32_Gy_Ev(void)
 			}
 		}
 	}
+	TRACEOUT(("SSE4_2_CRC32_Gy_Ev"));
 }
 
 void SSE4_2_POPCNT_16(void)
@@ -460,6 +462,7 @@ void SSE4_2_POPCNT_16(void)
 	CPU_FLAG &=  ~A_FLAG;
 	CPU_FLAG &=  ~P_FLAG;
 	if (tmp == 0){CPU_FLAG |=  Z_FLAG;}
+	TRACEOUT(("SSE4_2_POPCNT_16"));
 }
 
 void SSE4_2_POPCNT_32(void)
@@ -503,6 +506,7 @@ void SSE4_2_POPCNT_32(void)
 	CPU_FLAG &=  ~A_FLAG;
 	CPU_FLAG &=  ~P_FLAG;
 	if (tmp == 0){CPU_FLAG |=  Z_FLAG;}
+	TRACEOUT(("SSE4_2_POPCNT_32"));
 }
 
 #else
