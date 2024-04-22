@@ -4360,8 +4360,8 @@ void (*insttable_3byteF20F38_16[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	SSE4_2_CRC32_Gy_Eb,		/* F0 */
-	SSE4_2_CRC32_Gy_Ev,
+	SSE4_2_CRC32_Gy_Eb_16,		/* F0 */
+	SSE4_2_CRC32_Gy_Ev_16,
 	NULL,
 	NULL,
 	NULL,

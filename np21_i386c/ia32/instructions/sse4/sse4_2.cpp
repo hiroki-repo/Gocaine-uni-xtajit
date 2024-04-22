@@ -385,18 +385,74 @@ void SSE4_2_CRC32_Gy_Eb(void)
 {
 	int i;
 
-	UINT8 data2buf[16];
-	UINT32 *data1;
-	UINT8  *data2;
-	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
-	data1[0] ^= data2[0];
+	UINT32 op;
+
+	UINT32* out;
+	UINT32 dst, madr, tmp, src;
+
+	tmp = 0;
+
+	GET_PCBYTE((op));
+
+	if (op >= 0xc0) {
+		CPU_WORKCLOCK(21);
+		src = *(reg32_b20[op]);
+	}
+	else {
+		CPU_WORKCLOCK(24);
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, madr);
+	}
+	out = reg32_b53[op];
+	tmp = *out;
+
+	tmp ^= src;
 	for(i=0;i<8;i++){
-		if (data1[0] & 1){
-			data1[0] = (data1[0] >> 1) ^ 0x82f63b78;
+		if (tmp & 1){
+			tmp = (tmp >> 1) ^ 0x82f63b78;
 		}else{
-			data1[0] = (data1[0] >> 1);
+			tmp = (tmp >> 1);
 		}
 	}
+	*out = (UINT32)tmp;
+	TRACEOUT(("SSE4_2_CRC32_Gy_Eb"));
+}
+
+void SSE4_2_CRC32_Gy_Eb_16(void)
+{
+	int i;
+
+	UINT32 op;
+
+	UINT32* out;
+	UINT32 dst, madr, tmp, src;
+
+	tmp = 0;
+
+	GET_PCBYTE((op));
+
+	if (op >= 0xc0) {
+		CPU_WORKCLOCK(21);
+		src = *(reg16_b20[op]);
+	}
+	else {
+		CPU_WORKCLOCK(24);
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, madr);
+	}
+	out = (UINT32*)reg16_b53[op];
+	tmp = *out;
+
+	tmp ^= src;
+	for (i = 0; i < 8; i++) {
+		if (tmp & 1) {
+			tmp = (tmp >> 1) ^ 0x82f63b78;
+		}
+		else {
+			tmp = (tmp >> 1);
+		}
+	}
+	*out = (UINT32)tmp;
 	TRACEOUT(("SSE4_2_CRC32_Gy_Eb"));
 }
 
@@ -404,20 +460,78 @@ void SSE4_2_CRC32_Gy_Ev(void)
 {
 	int i, j;
 
-	UINT8 data2buf[16];
-	UINT32* data1;
-	UINT8  *data2;
-	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	UINT32 op;
+
+	UINT32* out;
+	UINT32 dst, madr, tmp, src;
+
+	tmp = 0;
+
+	GET_PCBYTE((op));
+
+	if (op >= 0xc0) {
+		CPU_WORKCLOCK(21);
+		src = *(reg32_b20[op]);
+	}
+	else {
+		CPU_WORKCLOCK(24);
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
+	}
+	out = reg32_b53[op];
+	tmp = *out;
+
 	for(j=0;j<4;j++){
-		data1[0] ^= data2[j];
+		tmp ^= ((src >> (j * 8)) & 0xFF);
 		for(i=0;i<8;i++){
-			if (data1[0] & 1){
-				data1[0] = (data1[0] >> 1) ^ 0x82f63b78;
+			if (tmp & 1){
+				tmp = (tmp >> 1) ^ 0x82f63b78;
 			}else{
-				data1[0] = (data1[0] >> 1);
+				tmp = (tmp >> 1);
 			}
 		}
 	}
+	*out = (UINT32)tmp;
+	TRACEOUT(("SSE4_2_CRC32_Gy_Ev"));
+}
+
+void SSE4_2_CRC32_Gy_Ev_16(void)
+{
+	int i, j;
+
+	UINT32 op;
+
+	UINT32* out;
+	UINT32 dst, madr, tmp, src;
+
+	tmp = 0;
+
+	GET_PCBYTE((op));
+
+	if (op >= 0xc0) {
+		CPU_WORKCLOCK(21);
+		src = *(reg16_b20[op]);
+	}
+	else {
+		CPU_WORKCLOCK(24);
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
+	}
+	out = (UINT32*)reg16_b53[op];
+	tmp = *out;
+
+	for (j = 0; j < 2; j++) {
+		tmp ^= ((src >> (j * 8)) & 0xFF);
+		for (i = 0; i < 8; i++) {
+			if (tmp & 1) {
+				tmp = (tmp >> 1) ^ 0x82f63b78;
+			}
+			else {
+				tmp = (tmp >> 1);
+			}
+		}
+	}
+	*out = (UINT32)tmp;
 	TRACEOUT(("SSE4_2_CRC32_Gy_Ev"));
 }
 
@@ -542,6 +656,16 @@ void SSE4_2_CRC32_Gy_Eb(void)
 }
 
 void SSE4_2_CRC32_Gy_Ev(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void SSE4_2_CRC32_Gy_Eb_16(void)
+{
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void SSE4_2_CRC32_Gy_Ev_16(void)
 {
 	EXCEPTION(UD_EXCEPTION, 0);
 }

@@ -37,6 +37,8 @@ void SSE4_2_PCMPISTRM(void);
 void SSE4_2_PCMPISTRI(void);
 void SSE4_2_CRC32_Gy_Eb(void);
 void SSE4_2_CRC32_Gy_Ev(void);
+void SSE4_2_CRC32_Gy_Eb_16(void);
+void SSE4_2_CRC32_Gy_Ev_16(void);
 void SSE4_2_POPCNT_16(void);
 void SSE4_2_POPCNT_32(void);
 
