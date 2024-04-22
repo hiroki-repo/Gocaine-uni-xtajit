@@ -268,8 +268,8 @@ void SSE4_2_PCMPGTQ(void)
 {
 	int i;
 
-	UINT64 data2buf[2];
-	UINT64 *data1, *data2;
+	INT64 data2buf[2];
+	INT64 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	for(i=0;i<2;i++){
 		if (data1[i] > data2[i]){
