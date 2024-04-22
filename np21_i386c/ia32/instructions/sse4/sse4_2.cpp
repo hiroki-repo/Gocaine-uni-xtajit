@@ -449,15 +449,10 @@ void SSE4_2_POPCNT_16(void)
 		tmp += ((src>>i)&1);
 	}
 
-	if (op >= 0xc0) {
-		CPU_WORKCLOCK(2);
-		out = reg16_b53[op];
-		*out = (UINT16)tmp;
-	} else {
-		CPU_WORKCLOCK(5);
-		madr = calc_ea_dst(op);
-		cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, madr, tmp);
-	}
+	CPU_WORKCLOCK(2);
+	out = reg16_b53[op];
+	*out = (UINT16)tmp;
+
 	CPU_FLAG &=  ~C_FLAG;
 	CPU_FLAG &=  ~Z_FLAG;
 	CPU_FLAG &=  ~S_FLAG;
@@ -497,15 +492,10 @@ void SSE4_2_POPCNT_32(void)
 		tmp += ((src>>i)&1);
 	}
 
-	if (op >= 0xc0) {
-		CPU_WORKCLOCK(2);
-		out = reg32_b53[op];
-		*out = (UINT32)tmp;
-	} else {
-		CPU_WORKCLOCK(5);
-		madr = calc_ea_dst(op);
-		cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, madr, tmp);
-	}
+	CPU_WORKCLOCK(2);
+	out = reg32_b53[op];
+	*out = (UINT32)tmp;
+
 	CPU_FLAG &=  ~C_FLAG;
 	CPU_FLAG &=  ~Z_FLAG;
 	CPU_FLAG &=  ~S_FLAG;
