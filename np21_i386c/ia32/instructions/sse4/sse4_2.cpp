@@ -396,7 +396,7 @@ void SSE4_2_CRC32_Gy_Eb(void)
 
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(21);
-		src = *(reg32_b20[op]);
+		src = *(reg8_b20[op]);
 	}
 	else {
 		CPU_WORKCLOCK(24);
@@ -433,7 +433,7 @@ void SSE4_2_CRC32_Gy_Eb_16(void)
 
 	if (op >= 0xc0) {
 		CPU_WORKCLOCK(21);
-		src = *(reg16_b20[op]);
+		src = *(reg8_b20[op]);
 	}
 	else {
 		CPU_WORKCLOCK(24);
