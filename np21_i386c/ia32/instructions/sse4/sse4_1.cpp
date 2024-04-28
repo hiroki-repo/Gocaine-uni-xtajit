@@ -31,7 +31,7 @@
 inline int sse4_2__trunc(double sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((double)sse4_2_trunc__ - (double)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
 inline int sse4_2__truncf(float sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((float)sse4_2_trunc__ - (float)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
 inline int sse4_2__nearbyint(double sse4_2_nearbyint__) { return (int)((floor(sse4_2_nearbyint__)<0.5)?floor(sse4_2_nearbyint__):ceil(sse4_2_nearbyint__)); }
-inline int sse4_2__nearbyintf(float sse4_2_nearbyint__) { return (int)((floor(sse4_2_nearbyint__) < 0.5) ? floor(sse4_2_nearbyint__) : ceil(sse4_2_nearbyint__)); }
+inline int sse4_2__nearbyintf(float sse4_2_nearbyint__) { return (int)((floorf(sse4_2_nearbyint__) < 0.5) ? floorf(sse4_2_nearbyint__) : ceilf(sse4_2_nearbyint__)); }
 
 #define isnan(x) (_isnan(x))
 
