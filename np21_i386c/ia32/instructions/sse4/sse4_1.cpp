@@ -895,7 +895,7 @@ void SSE4_1_MPSADBW(void)
 {
 	int i;
 
-	UINT8 data2buf[2];
+	UINT8 data2buf[16];
 	UINT8 *data1, *data2;
 	SINT32 tmpsinedcalcb[11];
 	SINT32 tmpsinedcalc;
