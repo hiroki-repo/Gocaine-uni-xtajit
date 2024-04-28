@@ -28,6 +28,11 @@
 #include <math.h>
 #include <float.h>
 
+inline int sse4_2__trunc(double sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((double)sse4_2_trunc__ - (double)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
+inline int sse4_2__truncf(float sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((float)sse4_2_trunc__ - (float)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
+inline int sse4_2__nearbyint(double sse4_2_nearbyint__) { return (int)((floor(sse4_2_nearbyint__)<0.5)?floor(sse4_2_nearbyint__):ceil(sse4_2_nearbyint__)); }
+inline int sse4_2__nearbyintf(float sse4_2_nearbyint__) { return (int)((floor(sse4_2_nearbyint__) < 0.5) ? floor(sse4_2_nearbyint__) : ceil(sse4_2_nearbyint__)); }
+
 #define isnan(x) (_isnan(x))
 
 #include "../../cpu.h"
@@ -929,7 +934,7 @@ void SSE4_1_ROUNDPS(void)
 	for(i=0;i<4;i++){
 		switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 			case 0:
-				data1[i] = nearbyintf(data2[i]);
+				data1[i] = sse4_2__nearbyintf(data2[i]);
 			break;
 			case 1:
 				data1[i] = floorf(data2[i]);
@@ -938,7 +943,7 @@ void SSE4_1_ROUNDPS(void)
 				data1[i] = ceilf(data2[i]);
 			break;
 			case 3:
-				data1[i] = truncf(data2[i]);
+				data1[i] = sse4_2__truncf(data2[i]);
 			break;
 		}
 	}
@@ -958,7 +963,7 @@ void SSE4_1_ROUNDPD(void)
 	for(i=0;i<2;i++){
 		switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 			case 0:
-				data1[i] = nearbyint(data2[i]);
+				data1[i] = sse4_2__nearbyint(data2[i]);
 			break;
 			case 1:
 				data1[i] = floor(data2[i]);
@@ -967,7 +972,7 @@ void SSE4_1_ROUNDPD(void)
 				data1[i] = ceil(data2[i]);
 			break;
 			case 3:
-				data1[i] = trunc(data2[i]);
+				data1[i] = sse4_2__trunc(data2[i]);
 			break;
 		}
 	}
@@ -984,7 +989,7 @@ void SSE4_1_ROUNDSS(void)
 	GET_PCBYTE((op));
 	switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 		case 0:
-			data1[0] = nearbyintf(data2[0]);
+			data1[0] = sse4_2__nearbyintf(data2[0]);
 		break;
 		case 1:
 			data1[0] = floorf(data2[0]);
@@ -993,7 +998,7 @@ void SSE4_1_ROUNDSS(void)
 			data1[0] = ceilf(data2[0]);
 		break;
 		case 3:
-			data1[0] = truncf(data2[0]);
+			data1[0] = sse4_2__truncf(data2[0]);
 		break;
 	}
 	TRACEOUT(("SSE4_1_ROUNDSS"));
@@ -1009,7 +1014,7 @@ void SSE4_1_ROUNDSD(void)
 	GET_PCBYTE((op));
 	switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 		case 0:
-			data1[0] = nearbyint(data2[0]);
+			data1[0] = sse4_2__nearbyint(data2[0]);
 		break;
 		case 1:
 			data1[0] = floor(data2[0]);
@@ -1018,7 +1023,7 @@ void SSE4_1_ROUNDSD(void)
 			data1[0] = ceil(data2[0]);
 		break;
 		case 3:
-			data1[0] = trunc(data2[0]);
+			data1[0] = sse4_2__trunc(data2[0]);
 		break;
 	}
 	TRACEOUT(("SSE4_1_ROUNDSD"));
