@@ -31,7 +31,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{1ccf131e-01a2-4c0f-af90-27445864de03}</ProjectGuid>
     <RootNamespace>Gocaineunixtajit</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -264,6 +264,7 @@
     <ClCompile Include="np21_i386c\ia32\instructions\shift_rotate.cpp" />
     <ClCompile Include="np21_i386c\ia32\instructions\sse2\sse2.cpp" />
     <ClCompile Include="np21_i386c\ia32\instructions\sse3\sse3.cpp" />
+    <ClCompile Include="np21_i386c\ia32\instructions\sse4a\sse4a.cpp" />
     <ClCompile Include="np21_i386c\ia32\instructions\sse4\sse4_1.cpp" />
     <ClCompile Include="np21_i386c\ia32\instructions\sse4\sse4_2.cpp" />
     <ClCompile Include="np21_i386c\ia32\instructions\sse\sse.cpp" />

@@ -793,6 +793,7 @@ void CPU_RESET()
 	i386cpuid.cpu_stepping = CPU_STEPPING;
 	i386cpuid.cpu_feature = CPU_FEATURES_ALL;
 	i386cpuid.cpu_feature_ex = CPU_FEATURES_EX_ALL;
+	i386cpuid.cpu_feature_ex_ecx = CPU_FEATURES_EX_ECX_ALL;
 	i386cpuid.cpu_feature_ecx = CPU_FEATURES_ECX_ALL;
 	i386cpuid.cpu_eflags_mask = CPU_EFLAGS_MASK;
 	i386cpuid.cpu_brandid = CPU_BRAND_ID_NEKOPRO2;
