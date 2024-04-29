@@ -51,6 +51,7 @@
 #include "instructions/ssse3/ssse3.h"
 #include "instructions/sse4/sse4_1.h"
 #include "instructions/sse4/sse4_2.h"
+#include "instructions/sse4a/sse4a.h"
 
 /*
  * UNDEF OP
@@ -2129,8 +2130,8 @@ void (*insttable_2byte660F_32[256])(void) = {
 	SSE2_PCMPEQW,
 	SSE2_PCMPEQD,
 	NULL,
-	NULL,		/* 78 */
-	NULL,
+	SSE4a_EXTRQimm,		/* 78 */
+	SSE4a_EXTRQxmm,
 	NULL,
 	NULL,
 	SSE3_HADDPD,
@@ -2321,7 +2322,7 @@ void (*insttable_2byteF20F_32[256])(void) = {
 	NULL,		/* 28 */
 	NULL,
 	SSE2_CVTSI2SD,
-	NULL,
+	SSE4a_MOVNTSD,
 	SSE2_CVTTSD2SI,
 	SSE2_CVTSD2SI,
 	NULL,
@@ -2403,8 +2404,8 @@ void (*insttable_2byteF20F_32[256])(void) = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,		/* 78 */
-	NULL,
+	SSE4a_INSERTQimm,		/* 78 */
+	SSE4a_INSERTQxmm,
 	NULL,
 	NULL,
 	SSE3_HADDPS,
@@ -2595,7 +2596,7 @@ void (*insttable_2byteF30F_32[256])(void) = {
 	NULL,		/* 28 */
 	NULL,
 	SSE_CVTSI2SS,
-	NULL,
+	SSE4a_MOVNTSS,
 	SSE_CVTTSS2SI,
 	SSE_CVTSS2SI,
 	NULL,

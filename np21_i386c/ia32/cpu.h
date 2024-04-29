@@ -121,6 +121,7 @@
 #define USE_SSSE3
 #define USE_SSE4_1
 #define USE_SSE4_2
+#define USE_SSE4A
 #define USE_TSC
 #define USE_FASTPAGING
 #define USE_VME
@@ -484,7 +485,8 @@ typedef struct {
 
 	UINT8 allow_movCS; // mov cs,xx       
 	UINT8 reserved8[3]; //      ̊g   ̂  ߂ɂƂ肠    
-	UINT32 reserved[30]; //      ̊g   ̂  ߂ɂƂ肠    32bit*31 p ӂ  Ă   
+	UINT32 cpu_feature_ex_ecx; // ECX g   @ \ t   O
+	UINT32 reserved[29]; //      ̊g   ̂  ߂ɂƂ肠    32bit*31 p ӂ  Ă   
 	
 	UINT8 fpu_type; // FPU   
 } I386CPUID;
@@ -751,6 +753,38 @@ extern sigjmp_buf	exec_1step_jmpbuf;
 #define	CPU_FEATURES_EX_AMD_K6_III			(CPU_FEATURE_EX_3DNOW)
 #define	CPU_FEATURES_EX_AMD_K7_ATHLON		(CPU_FEATURE_EX_3DNOW|CPU_FEATURE_EX_E3DNOW)
 #define	CPU_FEATURES_EX_AMD_K7_ATHLON_XP	(CPU_FEATURE_EX_3DNOW|CPU_FEATURE_EX_E3DNOW)
+
+/*** extended ECX feature ***/
+#define	CPU_FEATURE_EX_ECX_SSE4A		(1 << 6)
+
+#if defined(USE_MMX)&&defined(USE_FPU)&&defined(USE_3DNOW)&&defined(USE_SSE)&&defined(USE_SSE2)&&defined(USE_SSE3)&&defined(USE_SSE4A)
+#define	CPU_FEATURE_EX_ECX_SSE4A_FLAG	CPU_FEATURE_EX_ECX_SSE4A
+#else
+#define	CPU_FEATURE_EX_ECX_SSE4A_FLAG	0
+#endif
+
+/*  g p ł   @ \ S   */
+#define	CPU_FEATURES_EX_ECX_ALL		(CPU_FEATURE_EX_ECX_SSE4A_FLAG)
+
+#define	CPU_FEATURES_EX_ECX_CORE_I		(0)
+#define	CPU_FEATURES_EX_ECX_CORE_2_DUOW	(0)
+#define	CPU_FEATURES_EX_ECX_CORE_2_DUO	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM_4	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM_M	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM_III	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM_II	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM_PRO	(0)
+#define	CPU_FEATURES_EX_ECX_MMX_PENTIUM	(0)
+#define	CPU_FEATURES_EX_ECX_PENTIUM		(0)
+#define	CPU_FEATURES_EX_ECX_I486DX		(0)
+#define	CPU_FEATURES_EX_ECX_I486SX		(0)
+#define	CPU_FEATURES_EX_ECX_80386		(0)
+#define	CPU_FEATURES_EX_ECX_80286		(0)
+
+#define	CPU_FEATURES_EX_ECX_AMD_K6_2			(0)
+#define	CPU_FEATURES_EX_ECX_AMD_K6_III			(0)
+#define	CPU_FEATURES_EX_ECX_AMD_K7_ATHLON		(0)
+#define	CPU_FEATURES_EX_ECX_AMD_K7_ATHLON_XP	(0)
 
 /*** ECX feature ***/
 #define	CPU_FEATURE_ECX_SSE3		(1 << 0)
