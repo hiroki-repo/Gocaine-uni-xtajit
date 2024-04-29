@@ -28,11 +28,6 @@
 #include <math.h>
 #include <float.h>
 
-inline int sse4_2__trunc(double sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((double)sse4_2_trunc__ - (double)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
-inline int sse4_2__truncf(float sse4_2_trunc__) { int sse4_2_trunc___ = 0; sse4_2_trunc___ = ((int)sse4_2_trunc__); return (((float)sse4_2_trunc__ - (float)sse4_2_trunc___) > 0.5) ? (sse4_2_trunc___ + 1) : sse4_2_trunc___; }
-inline int sse4_2__nearbyint(double sse4_2_nearbyint__) { return (int)((floor(sse4_2_nearbyint__)<0.5)?floor(sse4_2_nearbyint__):ceil(sse4_2_nearbyint__)); }
-inline int sse4_2__nearbyintf(float sse4_2_nearbyint__) { return (int)((floorf(sse4_2_nearbyint__) < 0.5) ? floorf(sse4_2_nearbyint__) : ceilf(sse4_2_nearbyint__)); }
-
 #define isnan(x) (_isnan(x))
 
 #include "../../cpu.h"
@@ -46,7 +41,7 @@ inline int sse4_2__nearbyintf(float sse4_2_nearbyint__) { return (int)((floorf(s
 
 #if defined(USE_SSE4_1) && defined(USE_SSSE3) && defined(USE_SSE3) && defined(USE_SSE2) && defined(USE_SSE) && defined(USE_FPU)
 
-#define CPU_SSSE3WORKCLOCK	CPU_WORKCLOCK(8)
+#define CPU_SSSE3WORKCLOCK	CPU_WORKCLOCK(2)
 
 static INLINE void
 SSE4_1_check_NM_EXCEPTION(){
@@ -89,6 +84,56 @@ MMX_setTag(void)
 	FPU_STAT_TOP = 0;
 	FPU_STATUSWORD &= ~0x3800;
 	FPU_STATUSWORD |= (FPU_STAT_TOP&7)<<11;
+}
+
+
+static INLINE float NEARBYINTF(float val)
+{
+	float floorval;
+	floorval = floorf(val);
+	if (val - floorval > 0.5f){
+		return (floorval + 1); // 切り上げ
+	}else if (val - floorval < 0.5f){
+		return (floorval); // 切り捨て
+	}else{
+		if(floor(floorval / 2) == floorval/2){
+			return (floorval); // 偶数
+		}else{
+			return (floorval+1); // 奇数
+		}
+	}
+}
+static INLINE float TRUNCF(float val)
+{
+	if(val < 0){
+		return ceilf(val); // ゼロ方向への切り捨て
+	}else{
+		return floorf(val); // ゼロ方向への切り捨て
+	}
+}
+static INLINE double NEARBYINT(double val)
+{
+	double floorval;
+	floorval = floor(val);
+	if (val - floorval > 0.5f){
+		return (floorval + 1); // 切り上げ
+	}else if (val - floorval < 0.5f){
+		return (floorval); // 切り捨て
+	}else{
+		if(floor(floorval / 2) == floorval/2){
+			return (floorval); // 偶数
+		}else{
+			return (floorval+1); // 奇数
+		}
+	}
+}
+static INLINE double TRUNC(double val)
+{
+	if(val < 0){
+		return ceil(val); // ゼロ方向への切り捨て
+	}else{
+		return floor(val); // ゼロ方向への切り捨て
+	}
 }
 
 /*
@@ -900,7 +945,7 @@ void SSE4_1_MPSADBW(void)
 {
 	int i;
 
-	UINT8 data2buf[16];
+	UINT8 data2buf[8];
 	UINT8 *data1, *data2;
 	SINT32 tmpsinedcalcb[11];
 	SINT32 tmpsinedcalc;
@@ -934,7 +979,7 @@ void SSE4_1_ROUNDPS(void)
 	for(i=0;i<4;i++){
 		switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 			case 0:
-				data1[i] = sse4_2__nearbyintf(data2[i]);
+				data1[i] = NEARBYINTF(data2[i]);
 			break;
 			case 1:
 				data1[i] = floorf(data2[i]);
@@ -943,7 +988,7 @@ void SSE4_1_ROUNDPS(void)
 				data1[i] = ceilf(data2[i]);
 			break;
 			case 3:
-				data1[i] = sse4_2__truncf(data2[i]);
+				data1[i] = TRUNCF(data2[i]);
 			break;
 		}
 	}
@@ -963,7 +1008,7 @@ void SSE4_1_ROUNDPD(void)
 	for(i=0;i<2;i++){
 		switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 			case 0:
-				data1[i] = sse4_2__nearbyint(data2[i]);
+				data1[i] = NEARBYINT(data2[i]);
 			break;
 			case 1:
 				data1[i] = floor(data2[i]);
@@ -972,7 +1017,7 @@ void SSE4_1_ROUNDPD(void)
 				data1[i] = ceil(data2[i]);
 			break;
 			case 3:
-				data1[i] = sse4_2__trunc(data2[i]);
+				data1[i] = TRUNC(data2[i]);
 			break;
 		}
 	}
@@ -989,7 +1034,7 @@ void SSE4_1_ROUNDSS(void)
 	GET_PCBYTE((op));
 	switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 		case 0:
-			data1[0] = sse4_2__nearbyintf(data2[0]);
+			data1[0] = NEARBYINTF(data2[0]);
 		break;
 		case 1:
 			data1[0] = floorf(data2[0]);
@@ -998,7 +1043,7 @@ void SSE4_1_ROUNDSS(void)
 			data1[0] = ceilf(data2[0]);
 		break;
 		case 3:
-			data1[0] = sse4_2__truncf(data2[0]);
+			data1[0] = TRUNCF(data2[0]);
 		break;
 	}
 	TRACEOUT(("SSE4_1_ROUNDSS"));
@@ -1014,7 +1059,7 @@ void SSE4_1_ROUNDSD(void)
 	GET_PCBYTE((op));
 	switch ((op & 4) ? ((CPU_MXCSR >> 13) & 3) : (op & 3)){
 		case 0:
-			data1[0] = sse4_2__nearbyint(data2[0]);
+			data1[0] = NEARBYINT(data2[0]);
 		break;
 		case 1:
 			data1[0] = floor(data2[0]);
@@ -1023,7 +1068,7 @@ void SSE4_1_ROUNDSD(void)
 			data1[0] = ceil(data2[0]);
 		break;
 		case 3:
-			data1[0] = sse4_2__trunc(data2[0]);
+			data1[0] = TRUNC(data2[0]);
 		break;
 	}
 	TRACEOUT(("SSE4_1_ROUNDSD"));

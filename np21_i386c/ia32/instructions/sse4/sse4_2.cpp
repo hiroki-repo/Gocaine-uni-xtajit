@@ -42,7 +42,7 @@
 
 #if defined(USE_SSE4_2) && defined(USE_SSE4_1) && defined(USE_SSSE3) && defined(USE_SSE3) && defined(USE_SSE2) && defined(USE_SSE) && defined(USE_FPU)
 
-#define CPU_SSSE3WORKCLOCK	CPU_WORKCLOCK(8)
+#define CPU_SSSE3WORKCLOCK	CPU_WORKCLOCK(2)
 
 static INLINE void
 SSE4_2_check_NM_EXCEPTION(){
@@ -193,40 +193,42 @@ static INLINE int overrideIfDataInvalid(UINT8 **data1, UINT8 **data2, UINT8 *dat
 			}
 		}
 	}
+	return 0; // コンパイルエラー回避仮
 }
 
 static INLINE UINT32 sse42_compare_string_explicit_len(UINT8 **data1, UINT8 **data2, UINT8 *data2buf, int cmpmode, int lmem, int lreg){
 	UINT32 IntRes1 = 0;
 	UINT32 IntRes2 = 0;
 	int n_packed = (cmpmode&1)?8:16;
+	int iii0, iii1;
 	if (lreg<0) { lreg = -lreg; }
 	if (lmem<0) { lmem = -lmem; }
 	if (lreg>n_packed) { lreg = n_packed; }
 	if (lmem>n_packed) { lmem = n_packed; }
 	switch((cmpmode >> 2) & 3){
 		case 0:
-		for(int iii0=0;iii0<n_packed;iii0++){
-			for(int iii1=0;iii1<n_packed;iii1++){
+		for(iii0=0;iii0<n_packed;iii0++){
+			for(iii1=0;iii1<n_packed;iii1++){
 				IntRes1 |= overrideIfDataInvalid(data1,data2,data2buf,cmpmode,lmem,lreg,iii0,iii1) << iii0;
 			}
 		}
 		break;
 		case 1:
-		for(int iii0=0;iii0<n_packed;iii0++){
-			for(int iii1=0;iii1<n_packed;iii1++){
+		for(iii0=0;iii0<n_packed;iii0++){
+			for(iii1=0;iii1<n_packed;iii1++){
 				IntRes1 |= (overrideIfDataInvalid(data1,data2,data2buf,cmpmode,lmem,lreg,iii0,iii1) & overrideIfDataInvalid(data1,data2,data2buf,cmpmode,lmem,lreg,iii0,iii1+1)) << iii0;
 			}
 		}
 		break;
 		case 2:
-		for(int iii0=0;iii0<n_packed;iii0++){
+		for(iii0=0;iii0<n_packed;iii0++){
 			IntRes1 |= overrideIfDataInvalid(data1,data2,data2buf,cmpmode,lmem,lreg,iii0,iii0) << iii0;
 		}
 		break;
 		case 3:
 		IntRes1 = (1<<n_packed)-1;
-		for(int iii0=0;iii0<n_packed;iii0++){
-			for(int iii1=0;iii1<n_packed;iii1++){
+		for(iii0=0;iii0<n_packed;iii0++){
+			for(iii1=0;iii1<n_packed;iii1++){
 				int iii2 = iii0 + iii1;
 				IntRes1 &= (((1 << n_packed)-1) ^ (1 << iii0)) | overrideIfDataInvalid(data1,data2,data2buf,cmpmode,lmem,lreg,iii2,iii1) << iii0;
 			}
@@ -284,6 +286,7 @@ void SSE4_2_PCMPGTQ(void)
 void SSE4_2_PCMPESTRM(void)
 {
 	int i;
+	UINT32 tmp;
 
 	UINT32 op;
 
@@ -291,7 +294,7 @@ void SSE4_2_PCMPESTRM(void)
 	UINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	GET_PCBYTE((op));
-	UINT32 tmp = sse42_compare_string_explicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op,CPU_EDX,CPU_EAX);
+	tmp = sse42_compare_string_explicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op,CPU_EDX,CPU_EAX);
 	if (op & 64){
 		switch (op & 1){
 			case 0:
@@ -311,6 +314,7 @@ void SSE4_2_PCMPESTRM(void)
 void SSE4_2_PCMPESTRI(void)
 {
 	int i;
+	UINT32 tmp;
 
 	UINT32 op;
 
@@ -318,7 +322,7 @@ void SSE4_2_PCMPESTRI(void)
 	UINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	GET_PCBYTE((op));
-	UINT32 tmp = sse42_compare_string_explicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op,CPU_EDX,CPU_EAX);
+	tmp = sse42_compare_string_explicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op,CPU_EDX,CPU_EAX);
 	if (!tmp){
 		CPU_ECX = (op&1)?8:16;
 	} else if (op & 64) {
@@ -334,6 +338,7 @@ void SSE4_2_PCMPESTRI(void)
 void SSE4_2_PCMPISTRM(void)
 {
 	int i;
+	UINT32 tmp;
 
 	UINT32 op;
 
@@ -341,7 +346,7 @@ void SSE4_2_PCMPISTRM(void)
 	UINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	GET_PCBYTE((op));
-	UINT32 tmp = sse42_compare_string_inplicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op);
+	tmp = sse42_compare_string_inplicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op);
 	if (op & 64){
 		switch (op & 1){
 			case 0:
@@ -361,6 +366,7 @@ void SSE4_2_PCMPISTRM(void)
 void SSE4_2_PCMPISTRI(void)
 {
 	int i;
+	UINT32 tmp;
 
 	UINT32 op;
 
@@ -368,7 +374,7 @@ void SSE4_2_PCMPISTRI(void)
 	UINT8 *data1, *data2;
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	GET_PCBYTE((op));
-	UINT32 tmp = sse42_compare_string_inplicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op);
+	tmp = sse42_compare_string_inplicit_len((UINT8**)(&data1), (UINT8**)(&data2), (UINT8*)data2buf,op);
 	if (!tmp){
 		CPU_ECX = (op&1)?8:16;
 	} else if (op & 64) {
@@ -394,11 +400,13 @@ void SSE4_2_CRC32_Gy_Eb(void)
 
 	GET_PCBYTE((op));
 
-	if (op >= 0xc0) {
+	if (op >= 0xc0)
+	{
 		CPU_WORKCLOCK(21);
 		src = *(reg8_b20[op]);
 	}
-	else {
+	else
+	{
 		CPU_WORKCLOCK(24);
 		madr = calc_ea_dst(op);
 		src = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, madr);
@@ -408,7 +416,8 @@ void SSE4_2_CRC32_Gy_Eb(void)
 
 	tmp ^= src;
 	for(i=0;i<8;i++){
-		if (tmp & 1){
+		if (tmp & 1)
+		{
 			tmp = (tmp >> 1) ^ 0x82f63b78;
 		}else{
 			tmp = (tmp >> 1);
@@ -431,11 +440,13 @@ void SSE4_2_CRC32_Gy_Eb_16(void)
 
 	GET_PCBYTE((op));
 
-	if (op >= 0xc0) {
+	if (op >= 0xc0)
+	{
 		CPU_WORKCLOCK(21);
 		src = *(reg8_b20[op]);
 	}
-	else {
+	else
+	{
 		CPU_WORKCLOCK(24);
 		madr = calc_ea_dst(op);
 		src = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, madr);
@@ -444,11 +455,14 @@ void SSE4_2_CRC32_Gy_Eb_16(void)
 	tmp = *out;
 
 	tmp ^= src;
-	for (i = 0; i < 8; i++) {
-		if (tmp & 1) {
+	for (i = 0; i < 8; i++)
+	{
+		if (tmp & 1)
+		{
 			tmp = (tmp >> 1) ^ 0x82f63b78;
 		}
-		else {
+		else
+		{
 			tmp = (tmp >> 1);
 		}
 	}
@@ -469,11 +483,13 @@ void SSE4_2_CRC32_Gy_Ev(void)
 
 	GET_PCBYTE((op));
 
-	if (op >= 0xc0) {
+	if (op >= 0xc0)
+	{
 		CPU_WORKCLOCK(21);
 		src = *(reg32_b20[op]);
 	}
-	else {
+	else
+	{
 		CPU_WORKCLOCK(24);
 		madr = calc_ea_dst(op);
 		src = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
@@ -484,7 +500,8 @@ void SSE4_2_CRC32_Gy_Ev(void)
 	for(j=0;j<4;j++){
 		tmp ^= ((src >> (j * 8)) & 0xFF);
 		for(i=0;i<8;i++){
-			if (tmp & 1){
+			if (tmp & 1)
+			{
 				tmp = (tmp >> 1) ^ 0x82f63b78;
 			}else{
 				tmp = (tmp >> 1);
@@ -508,11 +525,13 @@ void SSE4_2_CRC32_Gy_Ev_16(void)
 
 	GET_PCBYTE((op));
 
-	if (op >= 0xc0) {
+	if (op >= 0xc0)
+	{
 		CPU_WORKCLOCK(21);
 		src = *(reg16_b20[op]);
 	}
-	else {
+	else
+	{
 		CPU_WORKCLOCK(24);
 		madr = calc_ea_dst(op);
 		src = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
@@ -520,13 +539,17 @@ void SSE4_2_CRC32_Gy_Ev_16(void)
 	out = (UINT32*)reg16_b53[op];
 	tmp = *out;
 
-	for (j = 0; j < 2; j++) {
+	for (j = 0; j < 2; j++)
+	{
 		tmp ^= ((src >> (j * 8)) & 0xFF);
-		for (i = 0; i < 8; i++) {
-			if (tmp & 1) {
+		for (i = 0; i < 8; i++)
+		{
+			if (tmp & 1)
+			{
 				tmp = (tmp >> 1) ^ 0x82f63b78;
 			}
-			else {
+			else
+			{
 				tmp = (tmp >> 1);
 			}
 		}
@@ -537,16 +560,17 @@ void SSE4_2_CRC32_Gy_Ev_16(void)
 
 void SSE4_2_POPCNT_16(void)
 {
-	if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_POPCNT)) {
-		EXCEPTION(UD_EXCEPTION, 0);
-		return;
-	}
 	int i;
 
 	UINT32 op;
 
 	UINT16 *out;
 	UINT32 dst, madr,tmp,src;
+
+	if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_POPCNT)) {
+		EXCEPTION(UD_EXCEPTION, 0);
+		return;
+	}
 
 	tmp = 0;
 
@@ -576,21 +600,21 @@ void SSE4_2_POPCNT_16(void)
 	CPU_FLAG &=  ~A_FLAG;
 	CPU_FLAG &=  ~P_FLAG;
 	if (tmp == 0){CPU_FLAG |=  Z_FLAG;}
-	TRACEOUT(("SSE4_2_POPCNT_16"));
 }
 
 void SSE4_2_POPCNT_32(void)
 {
-	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_POPCNT)){
-		EXCEPTION(UD_EXCEPTION, 0);
-		return;
-	}
 	int i;
 
 	UINT32 op;
 
 	UINT32 *out;
 	UINT32 dst, madr,tmp,src;
+	
+	if(!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_POPCNT)){
+		EXCEPTION(UD_EXCEPTION, 0);
+		return;
+	}
 
 	tmp = 0;
 
@@ -620,7 +644,6 @@ void SSE4_2_POPCNT_32(void)
 	CPU_FLAG &=  ~A_FLAG;
 	CPU_FLAG &=  ~P_FLAG;
 	if (tmp == 0){CPU_FLAG |=  Z_FLAG;}
-	TRACEOUT(("SSE4_2_POPCNT_32"));
 }
 
 #else

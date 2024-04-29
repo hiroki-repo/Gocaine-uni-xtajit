@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Gocaine Project
+ * Copyright (c) 2024 SimK
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,27 +23,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	IA32_CPU_INSTRUCTION_SSE4_SSE4_2_H__
-#define	IA32_CPU_INSTRUCTION_SSE4_SSE4_2_H__
+#ifndef	IA32_CPU_INSTRUCTION_SSE4A_SSE4A_H__
+#define	IA32_CPU_INSTRUCTION_SSE4A_SSE4A_H__
 
 //#ifdef __cplusplus
 //extern "C" {
 //#endif
 
-void SSE4_2_PCMPGTQ(void);
-void SSE4_2_PCMPESTRM(void);
-void SSE4_2_PCMPESTRI(void);
-void SSE4_2_PCMPISTRM(void);
-void SSE4_2_PCMPISTRI(void);
-void SSE4_2_CRC32_Gy_Eb(void);
-void SSE4_2_CRC32_Gy_Ev(void);
-void SSE4_2_CRC32_Gy_Eb_16(void);
-void SSE4_2_CRC32_Gy_Ev_16(void);
-void SSE4_2_POPCNT_16(void);
-void SSE4_2_POPCNT_32(void);
+void SSE4a_MOVNTSD(void);
+void SSE4a_MOVNTSS(void);
+void SSE4a_EXTRQimm(void);
+void SSE4a_EXTRQxmm(void);
+void SSE4a_INSERTQimm(void);
+void SSE4a_INSERTQxmm(void);
 
 //#ifdef __cplusplus
 //}
 //#endif
 
-#endif	/* IA32_CPU_INSTRUCTION_SSE4_SSE4_2_H__ */
+#endif	/* IA32_CPU_INSTRUCTION_SSE4A_SSE4A_H__ */
