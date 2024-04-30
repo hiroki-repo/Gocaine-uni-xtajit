@@ -197,23 +197,67 @@ void SSE4a_MOVNTSS(void)
 }
 void SSE4a_INSERTQimm(void)
 {
-	// TODO: AMD64 Architecture Programmer’s Manual Volume 4 の説明を見て実装する
-	EXCEPTION(UD_EXCEPTION, 0);
+	UINT32 op,op2,op3;
+	UINT idx, sub;
+	UINT32 madr;
+	UINT64 data2buf[2];
+	UINT64* data1,*data2;
+
+	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	GET_PCBYTE((op2));
+	GET_PCBYTE((op3));
+	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	data1[0] = (data1[0] & (~(bitrangedx << (op3 & 63)))) | ((data2buf[0] & bitrangedx) << (op3 & 63));
+
+	TRACEOUT(("SSE4a_INSERTQimm"));
 }
 void SSE4a_INSERTQxmm(void)
 {
-	// TODO: AMD64 Architecture Programmer’s Manual Volume 4 の説明を見て実装する
-	EXCEPTION(UD_EXCEPTION, 0);
+	UINT32 op, op2, op3;
+	UINT idx, sub;
+	UINT32 madr;
+	UINT64 data2buf[2];
+	UINT64* data1, * data2;
+
+	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	op2 = ((data2buf[1] >> (8 * 0)) & 63);
+	op3 = ((data2buf[1] >> (8 * 1)) & 63);
+	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	data1[0] = (data1[0] & (~(bitrangedx << (op3 & 63)))) | ((data2buf[0] & bitrangedx) << (op3 & 63));
+
+	TRACEOUT(("SSE4a_INSERTQxmm"));
 }
 void SSE4a_EXTRQimm(void)
 {
-	// TODO: AMD64 Architecture Programmer’s Manual Volume 4 の説明を見て実装する
-	EXCEPTION(UD_EXCEPTION, 0);
+	UINT32 op, op2, op3;
+	UINT idx, sub;
+	UINT32 madr;
+	UINT64 data2buf[2];
+	UINT64* data1, * data2;
+
+	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	GET_PCBYTE((op2));
+	GET_PCBYTE((op3));
+	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	data1[0] = (data1[0] & (~(bitrangedx))) | ((data1[0] >> (op3 & 63)) & bitrangedx);
+
+	TRACEOUT(("SSE4a_EXTRQimm"));
 }
 void SSE4a_EXTRQxmm(void)
 {
-	// TODO: AMD64 Architecture Programmer’s Manual Volume 4 の説明を見て実装する
-	EXCEPTION(UD_EXCEPTION, 0);
+	UINT32 op, op2, op3;
+	UINT idx, sub;
+	UINT32 madr;
+	UINT64 data2buf[2];
+	UINT64* data1, * data2;
+
+	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
+	op2 = ((data2buf[0] >> (8 * 0)) & 63);
+	op3 = ((data2buf[0] >> (8 * 1)) & 63);
+	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	data1[0] = (data1[0] & (~(bitrangedx))) | ((data1[0] >> (op3 & 63)) & bitrangedx);
+
+	TRACEOUT(("SSE4a_EXTRQxmm"));
 }
 
 #else
