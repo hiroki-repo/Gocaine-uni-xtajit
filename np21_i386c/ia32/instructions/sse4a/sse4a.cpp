@@ -238,7 +238,7 @@ void SSE4a_EXTRQimm(void)
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	GET_PCBYTE((op2));
 	GET_PCBYTE((op3));
-	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	UINT64 bitrangedx = ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
 	data1[0] = ((data1[0] >> (op3 & 63)) & bitrangedx);
 
 	TRACEOUT(("SSE4a_EXTRQimm"));
@@ -254,7 +254,7 @@ void SSE4a_EXTRQxmm(void)
 	SSE_PART_GETDATA1DATA2_PD((double**)(&data1), (double**)(&data2), (double*)data2buf);
 	op2 = ((data2buf[0] >> (8 * 0)) & 63);
 	op3 = ((data2buf[0] >> (8 * 1)) & 63);
-	UINT64 bitrangedx = ((op2 & 63) == 0) ? 0 : ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
+	UINT64 bitrangedx = ((UINT64)((((SINT64)1) << (op2 & 63)) - ((SINT64)1)));
 	data1[0] = ((data1[0] >> (op3 & 63)) & bitrangedx);
 
 	TRACEOUT(("SSE4a_EXTRQxmm"));
