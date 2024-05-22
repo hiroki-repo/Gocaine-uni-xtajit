@@ -384,7 +384,7 @@ void cpuidhost(UINT32 prm_0, UINT32 prm_1, void* prm_2) {
 #ifdef _M_IX86
 #else
 #ifdef _M_ARM64
-#define GEN_LOADINT_FUNCTION(__reg,__val) *(UINT32*)(*pos) = 0xd2800000|(__reg&0x1f)|(((__val>>(16*0))&0xFFFF)<<5); (*pos) += 4; if (((__val>>(16*1))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2A00000|(__reg&0x1f)|(((__val>>(16*1))&0xFFFF)<<5); (*pos) += 4;} if (((__val>>(16*2))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2C00000|(__reg&0x1f)|(((__val>>(16*2))&0xFFFF)<<5); (*pos) += 4;} if (((__val>>(16*3))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2E00000|(__reg&0x1f)|(((__val>>(16*3))&0xFFFF)<<5); (*pos) += 4;}
+#define GEN_LOADINT_FUNCTION(__reg,__val) *(UINT32*)(*pos) = 0xd2800000|(__reg&0x1f)|((((__val)>>(16*0))&0xFFFF)<<5); (*pos) += 4; if ((((__val)>>(16*1))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2A00000|(__reg&0x1f)|((((__val)>>(16*1))&0xFFFF)<<5); (*pos) += 4;} if ((((__val)>>(16*2))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2C00000|(__reg&0x1f)|((((__val)>>(16*2))&0xFFFF)<<5); (*pos) += 4;} if ((((__val)>>(16*3))&0xFFFF) != 0){*(UINT32*)(*pos) = 0xF2E00000|(__reg&0x1f)|((((__val)>>(16*3))&0xFFFF)<<5); (*pos) += 4;}
 #define GEN_PUSHNATIVE_FUNCTION(__reg1,__reg2) *(UINT32*)(*pos) = 0xA9BF03E0|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<11); (*pos) += 4;
 #define GEN_POPNATIVE_FUNCTION(__reg1,__reg2) *(UINT32*)(*pos) = 0xA8C103E0|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<11); (*pos) += 4;
 #define GEN_LOAD_FUNCTION(__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x38606800|((__bitsz&3)<<30)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
