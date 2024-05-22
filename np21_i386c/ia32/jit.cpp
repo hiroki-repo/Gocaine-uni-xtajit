@@ -392,8 +392,8 @@ void cpuidhost(UINT32 prm_0, UINT32 prm_1, void* prm_2) {
 #define GEN_ADD_FUNCTION(__setflg,__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x0b000000|((__bitsz&1)<<31)|((__setflg&1)<<29)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
 #define GEN_SUB_FUNCTION(__setflg,__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x4b000000|((__bitsz&1)<<31)|((__setflg&1)<<29)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
 #define GEN_AND_FUNCTION(__setflg,__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x0a000000|((__bitsz&1)<<31)|((__setflg&1)<<29)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
-#define GEN_XOR_FUNCTION(__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x4a000000|((__bitsz&1)<<31)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
-#define GEN_OR_FUNCTION(__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x2a000000|((__bitsz&1)<<31)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;
+#define GEN_XOR_FUNCTION(__setflg,__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x4a000000|((__bitsz&1)<<31)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;if ((__reg1&0x1f) != 31 || (__setflg&1) != 0){GEN_AND_FUNCTION(__setflg,__bitsz,31,__reg1,__reg1);}
+#define GEN_OR_FUNCTION(__setflg,__bitsz,__reg1,__reg2,__reg3) *(UINT32*)(*pos) = 0x2a000000|((__bitsz&1)<<31)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5)|((__reg3&0x1f)<<16); (*pos) += 4;if ((__reg1&0x1f) != 31 || (__setflg&1) != 0){GEN_AND_FUNCTION(__setflg,__bitsz,31,__reg1,__reg1);}
 #define GEN_CMP_FUNCTION(__bitsz,__reg1,__reg2) GEN_SUB_FUNCTION(1,__bitsz,31,__reg1,__reg2);
 #define GEN_TST_FUNCTION(__bitsz,__reg1,__reg2) GEN_AND_FUNCTION(1,__bitsz,31,__reg1,__reg2);
 #define GEN_MOV_FUNCTION(__bitsz,__reg1,__reg2) if (__reg2==31 || __reg1==31){*(UINT32*)(*pos) = 0x11000000|((__bitsz&1)<<31)|((__reg1&0x1f)<<0)|((__reg2&0x1f)<<5); (*pos) += 4;}else{GEN_OR_FUNCTION(__bitsz,__reg1,31,__reg2);}
