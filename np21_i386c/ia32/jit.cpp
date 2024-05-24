@@ -26,6 +26,30 @@
  //#include "compiler.h"
  //#include "dosio.h"
 
+#include "cpu.h"
+#include "ia32.mcr"
+
+#include "inst_table.h"
+
+#if defined(ENABLE_TRAP)
+#include "trap/steptrap.h"
+#endif
+
+#if defined(SUPPORT_ASYNC_CPU)
+#include "timing.h"
+#include "nevent.h"
+#include "pccore.h"
+#include	"iocore.h"
+#include	"sound/sound.h"
+#include	"sound/beep.h"
+#include	"sound/fmboard.h"
+#include	"sound/soundrom.h"
+#include	"cbus/mpu98ii.h"
+#if defined(SUPPORT_SMPU98)
+#include	"cbus/smpu98.h"
+#endif
+#endif
+
 //syntax : 2byte|prefix|callgate|opcodetogetimm|invalidop|priviledged|imm16/32bytest|imm8bytest|7|6|5|4|3|2|1|0|unused7|unused6|unused5|unused4|unused3|unused2|unused1|unused0|sse+(NO AS MMX)|imm16|offset16/32|offset8|imm16/32|imm8|modrm16/32|modrm8
 UINT32 opcodeoperantsizedesc[4][256] = {
 	{ // prim op
@@ -1062,30 +1086,6 @@ UINT32 opcodeoperantsizedesc[4][256] = {
 	}
 };
 
-#include "cpu.h"
-#include "ia32.mcr"
-
-#include "inst_table.h"
-
-#if defined(ENABLE_TRAP)
-#include "trap/steptrap.h"
-#endif
-
-#if defined(SUPPORT_ASYNC_CPU)
-#include "timing.h"
-#include "nevent.h"
-#include "pccore.h"
-#include	"iocore.h"
-#include	"sound/sound.h"
-#include	"sound/beep.h"
-#include	"sound/fmboard.h"
-#include	"sound/soundrom.h"
-#include	"cbus/mpu98ii.h"
-#if defined(SUPPORT_SMPU98)
-#include	"cbus/smpu98.h"
-#endif
-#endif
-
 #ifdef _M_X64
 void cpuidhost(UINT32 prm_0, UINT32 prm_1, void* prm_2) {
 	__cpuidex((int*)prm_2, prm_0, prm_1);
@@ -1259,6 +1259,7 @@ UINT64 _getmodrmsize(UINT64 prm_1,UINT64 prm_2) {
 	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000010) { sizetmp += 1; }
 	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000020) { sizetmp += ((CPU_INST_OP32) ? 4 : 2); }
 	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000040) { sizetmp += 2; }
+	return sizetmp;
 }
 
 void _aot_rep16(UINT8 op32_byte, UINT8 op_byte) {
@@ -1805,4 +1806,5 @@ UINT32 exec_jit() {
 		FlushInstructionCache(GetCurrentProcess(), (void*)jitptx, 655360);
 		((function4xecutejited*)(jitptx))();
 	} while (CPU_REMCLOCK > 0);
+	return CPU_REMCLOCK;
 }
