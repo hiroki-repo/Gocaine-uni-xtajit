@@ -1363,10 +1363,16 @@ void _aot_repne32(UINT8 op32_byte, UINT8 op_byte) {
 	}
 }
 
-bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
+inline bool GenNativecode(UINT64* pos) {
 	int prefix;
 	UINT32 op;
 
+	if ((*(UINT64*)(&CPU_STATSAVE.cpu_inst)) != (*(UINT64*)(&CPU_STATSAVE.cpu_inst_default))) {
+		GEN_LOADINT_FUNCTION(0, (*(UINT64*)(&CPU_STATSAVE.cpu_inst_default)));
+		GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_STATSAVE.cpu_inst);
+		GEN_LOADINT_FUNCTION(2, 0);
+		GEN_STOR_FUNCTION(3, 0, 1, 2);
+	}
 #if defined(USE_DEBUGGER)
 	CPU_PREV_CS = CPU_CS;
 #endif
@@ -1443,6 +1449,14 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 		GEN_LOADINT_FUNCTION(1, 0);
 		GEN_CALL_FUNCTION((UINT64)&exception);
 		GEN_RET_FUNCTION();
+		return 1;
+	}
+
+	if (prefix != 0) {
+		GEN_LOADINT_FUNCTION(0, (*(UINT64*)(&CPU_STATSAVE.cpu_inst)));
+		GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_STATSAVE.cpu_inst);
+		GEN_LOADINT_FUNCTION(2, 0);
+		GEN_STOR_FUNCTION(3, 0, 1, 2);
 	}
 
 #if defined(IA32_INSTRUCTION_TRACE)
@@ -1467,6 +1481,10 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 				if (CPU_INST_OP32) {
 #ifdef USE_SSSE3
 					if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+						GEN_LOADINT_FUNCTION(0, CPU_EIP);
+						GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+						GEN_LOADINT_FUNCTION(2, 0);
+						GEN_STOR_FUNCTION(3, 0, 1, 2);
 						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 						GEN_LOADINT_FUNCTION(1, 0);
 						GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1488,14 +1506,28 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 							GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F38_32[op]);
 						}
 						else {
+							GEN_LOADINT_FUNCTION(0, CPU_EIP);
+							GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+							GEN_LOADINT_FUNCTION(2, 0);
+							GEN_STOR_FUNCTION(3, 0, 1, 2);
 							GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 							GEN_LOADINT_FUNCTION(1, 0);
 							GEN_CALL_FUNCTION((UINT64)&exception);
 							GEN_RET_FUNCTION();
 							return 1;
 						}
+						CPU_EIP += _getmodrmsize(op, 2);
+						GEN_LOADINT_FUNCTION(0, CPU_EIP);
+						GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+						GEN_LOADINT_FUNCTION(2, 0);
+						GEN_STOR_FUNCTION(3, 0, 1, 2);
+						return 0;
 					}
 #else
+					GEN_LOADINT_FUNCTION(0, CPU_EIP);
+					GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+					GEN_LOADINT_FUNCTION(2, 0);
+					GEN_STOR_FUNCTION(3, 0, 1, 2);
 					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 					GEN_LOADINT_FUNCTION(1, 0);
 					GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1506,6 +1538,10 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 				else {
 #ifdef USE_SSSE3
 					if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+						GEN_LOADINT_FUNCTION(0, CPU_EIP);
+						GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+						GEN_LOADINT_FUNCTION(2, 0);
+						GEN_STOR_FUNCTION(3, 0, 1, 2);
 						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 						GEN_LOADINT_FUNCTION(1, 0);
 						GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1527,6 +1563,10 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 							GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F38_32[op]);
 						}
 						else {
+							GEN_LOADINT_FUNCTION(0, CPU_EIP);
+							GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+							GEN_LOADINT_FUNCTION(2, 0);
+							GEN_STOR_FUNCTION(3, 0, 1, 2);
 							GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 							GEN_LOADINT_FUNCTION(1, 0);
 							GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1534,9 +1574,17 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 							return 1;
 						}
 						CPU_EIP += _getmodrmsize(op, 2);
+						GEN_LOADINT_FUNCTION(0, CPU_EIP);
+						GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+						GEN_LOADINT_FUNCTION(2, 0);
+						GEN_STOR_FUNCTION(3, 0, 1, 2);
 						return 0;
 					}
 #else
+					GEN_LOADINT_FUNCTION(0, CPU_EIP);
+					GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+					GEN_LOADINT_FUNCTION(2, 0);
+					GEN_STOR_FUNCTION(3, 0, 1, 2);
 					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 					GEN_LOADINT_FUNCTION(1, 0);
 					GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1550,6 +1598,10 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 			else if (op == 0x3a) {
 #ifdef USE_SSSE3
 				if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+					GEN_LOADINT_FUNCTION(0, CPU_EIP);
+					GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+					GEN_LOADINT_FUNCTION(2, 0);
+					GEN_STOR_FUNCTION(3, 0, 1, 2);
 					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 					GEN_LOADINT_FUNCTION(1, 0);
 					GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1567,6 +1619,10 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 						GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F3A_32[op]);
 					}
 					else {
+						GEN_LOADINT_FUNCTION(0, CPU_EIP);
+						GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+						GEN_LOADINT_FUNCTION(2, 0);
+						GEN_STOR_FUNCTION(3, 0, 1, 2);
 						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 						GEN_LOADINT_FUNCTION(1, 0);
 						GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1574,9 +1630,17 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 						return 1;
 					}
 					CPU_EIP += _getmodrmsize(op, 3);
+					GEN_LOADINT_FUNCTION(0, CPU_EIP);
+					GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+					GEN_LOADINT_FUNCTION(2, 0);
+					GEN_STOR_FUNCTION(3, 0, 1, 2);
 					return 0;
 				}
 #else
+				GEN_LOADINT_FUNCTION(0, CPU_EIP);
+				GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+				GEN_LOADINT_FUNCTION(2, 0);
+				GEN_STOR_FUNCTION(3, 0, 1, 2);
 				GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
 				GEN_LOADINT_FUNCTION(1, 0);
 				GEN_CALL_FUNCTION((UINT64)&exception);
@@ -1634,13 +1698,34 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 #endif
 				}
 				CPU_EIP += _getmodrmsize(op, 1);
-				if ((op >= 0x80 && op <= 0x8f) || op == 0xaa || isretreqired(op, 1)) { GEN_RET_FUNCTION(); return 1; }
+				if ((op >= 0x80 && op <= 0x8f) || op == 0xaa || isretreqired(op, 1)) { 
+					GEN_LOADINT_FUNCTION(0, CPU_EIP);
+					GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+					GEN_LOADINT_FUNCTION(2, 0);
+					GEN_STOR_FUNCTION(3, 0, 1, 2);
+					GEN_RET_FUNCTION();
+					return 1; }
+				GEN_LOADINT_FUNCTION(0, CPU_EIP);
+				GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+				GEN_LOADINT_FUNCTION(2, 0);
+				GEN_STOR_FUNCTION(3, 0, 1, 2);
 			}
 		}
 		else {
 			GEN_CALL_FUNCTION((UINT64)*insttable_1byte[CPU_INST_OP32][op]);
 			CPU_EIP += _getmodrmsize(op, 0);
-			if ((op >= 0x70 && op <= 0x7f) || op == 0x9a || op == 0xc2 || op == 0xc3 || (op >= 0xca && op <= 0xcf) || (op >= 0xd8 && op <= 0xdf) || (op >= 0xe0 && op <= 0xe3) || (op >= 0xe8 && op <= 0xeb) || op == 0xf4 || op == 0xff || isretreqired(op, 0)) { GEN_RET_FUNCTION(); return 1; }
+			if ((op >= 0x70 && op <= 0x7f) || op == 0x9a || op == 0xc2 || op == 0xc3 || (op >= 0xca && op <= 0xcf) || (op >= 0xd8 && op <= 0xdf) || (op >= 0xe0 && op <= 0xe3) || (op >= 0xe8 && op <= 0xeb) || op == 0xf4 || op == 0xff || isretreqired(op, 0)) { 
+				GEN_LOADINT_FUNCTION(0, CPU_EIP);
+				GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+				GEN_LOADINT_FUNCTION(2, 0);
+				GEN_STOR_FUNCTION(3, 0, 1, 2);
+				GEN_RET_FUNCTION(); 
+				return 1;
+			}
+			GEN_LOADINT_FUNCTION(0, CPU_EIP);
+			GEN_LOADINT_FUNCTION(1, (UINT64)&CPU_EIP);
+			GEN_LOADINT_FUNCTION(2, 0);
+			GEN_STOR_FUNCTION(3, 0, 1, 2);
 		}
 		return 0;
 	}
@@ -1699,4 +1784,25 @@ bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 	}
 	GEN_RET_FUNCTION();
 	return 1;
+}
+
+inline void InsertRettoJITC(UINT64* pos) {
+	GEN_RET_FUNCTION();
+}
+
+typedef void function4xecutejited();
+
+UINT32 exec_jit() {
+	do {
+		UINT64 jitptx = (UINT64)VirtualAlloc(0, 655360, 0x3000, 0x40);
+		UINT64 jitptxlast = jitptx;
+		UINT64 eipbak = CPU_EIP;
+		while (GenNativecode(&jitptxlast) == true) {
+			if ((jitptxlast - jitptx) >= 651296) { break; }
+		}
+		CPU_EIP = eipbak;
+		InsertRettoJITC(&jitptxlast);
+		FlushInstructionCache(GetCurrentProcess(), (void*)jitptx, 655360);
+		((function4xecutejited*)(jitptx))();
+	} while (CPU_REMCLOCK > 0);
 }
