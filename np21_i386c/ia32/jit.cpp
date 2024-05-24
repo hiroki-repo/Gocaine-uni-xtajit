@@ -1095,13 +1095,13 @@ void cpuidhost(UINT32 prm_0, UINT32 prm_1, void* prm_2) {
 #ifdef _M_IX86
 __declspec(naked) void cpuidhost(UINT32, UINT32, void*) {
 	__asm {
+		push esi
+		mov esi, esp + 8
 		push eax
 		push ebx
 		push ecx
 		push edx
-		push esi
 		push edi
-		mov esi, esp + 8
 		pushfd
 		pop eax
 		or eax, 0x100000
@@ -1120,11 +1120,11 @@ __declspec(naked) void cpuidhost(UINT32, UINT32, void*) {
 		mov[edi + 8], ecx
 		mov[edi + 12], edx
 		pop edi
-		pop esi
 		pop edx
 		pop ecx
 		pop ebx
 		pop eax
+		pop esi
 		ret
 nocpuid:
 		xor eax, eax
@@ -1134,11 +1134,11 @@ nocpuid:
 		mov[edi + 8], eax
 		mov[edi + 12], eax
 		pop edi
-		pop esi
 		pop edx
 		pop ecx
 		pop ebx
 		pop eax
+		pop esi
 		ret
 	};
 }
@@ -1181,7 +1181,189 @@ void cpuidhost(UINT32 prm_0, UINT32 prm_1, void* prm_2) {
 #endif
 #endif
 
-void GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
+UINT64 _get_modrm8() {
+	UINT32 op;
+	UINT32 madr;
+	SINT32 res;
+	SINT8 src, dst;
+	UINT64 modrmpos;
+	UINT64 eipnow = CPU_EIP;
+	GET_PCBYTE(op);
+
+	if (op >= 0xc0) {
+		src = *(reg8_b20[op]);
+	}
+	else {
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread(CPU_INST_SEGREG_INDEX, madr);
+	}
+	modrmpos = (CPU_EIP - eipnow);
+	CPU_EIP = eipnow;
+	return modrmpos;
+}
+
+UINT64 _get_modrm16() {
+	UINT32 op;
+	UINT32 madr;
+	SINT32 res;
+	SINT8 src, dst;
+	UINT64 modrmpos;
+	UINT64 eipnow = CPU_EIP;
+	GET_PCBYTE(op);
+
+	if (op >= 0xc0) {
+		src = *(reg16_b20[op]);
+	}
+	else {
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, madr);
+	}
+	modrmpos = (CPU_EIP - eipnow);
+	CPU_EIP = eipnow;
+	return modrmpos;
+}
+
+UINT64 _get_modrm32() {
+	UINT32 op;
+	UINT32 madr;
+	SINT32 res;
+	SINT8 src, dst;
+	UINT64 modrmpos;
+	UINT64 eipnow = CPU_EIP;
+	GET_PCBYTE(op);
+
+	if (op >= 0xc0) {
+		src = *(reg32_b20[op]);
+	}
+	else {
+		madr = calc_ea_dst(op);
+		src = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, madr);
+	}
+	modrmpos = (CPU_EIP - eipnow);
+	CPU_EIP = eipnow;
+	return modrmpos;
+}
+
+bool isretreqired(UINT64 prm_1, UINT64 prm_2) {
+	if (opcodeoperantsizedesc[prm_2][prm_1]&0x0C000000) { return 1; }
+	return 0;
+}
+
+UINT64 _getmodrmsize(UINT64 prm_1,UINT64 prm_2) {
+	UINT64 sizetmp = 0;
+	UINT64 op_byte = 0;
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000001) { sizetmp += _get_modrm8(); }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000002) { sizetmp += ((CPU_INST_OP32) ? _get_modrm32() : _get_modrm16()); }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000004) { sizetmp += 1; }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000008) { sizetmp += ((CPU_INST_OP32) ? 4 : 2); }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000010) { sizetmp += 1; }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000020) { sizetmp += ((CPU_INST_OP32) ? 4 : 2); }
+	if (opcodeoperantsizedesc[prm_2][prm_1] & 0x00000040) { sizetmp += 2; }
+}
+
+void _aot_rep16(UINT8 op32_byte, UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_CX == 0) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+void _aot_repe16(UINT8 op32_byte,UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_CX == 0 || CC_NZ) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+void _aot_repne16(UINT8 op32_byte, UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_CX == 0 || CC_Z) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+void _aot_rep32(UINT8 op32_byte, UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_ECX == 0) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+void _aot_repe32(UINT8 op32_byte, UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_ECX == 0 || CC_NZ) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+void _aot_repne32(UINT8 op32_byte, UINT8 op_byte) {
+	CPU_WORKCLOCK(5);
+	for (;;) {
+		(*insttable_1byte[op32_byte][op_byte])();
+		if (--CPU_ECX == 0 || CC_Z) {
+#if defined(DEBUG)
+			cpu_debug_rep_cont = 0;
+#endif
+			break;
+		}
+		/*if (CPU_REMCLOCK <= 0) {
+			CPU_EIP = CPU_PREV_EIP;
+			break;
+		}*/
+	}
+}
+
+bool GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 	int prefix;
 	UINT32 op;
 
@@ -1279,12 +1461,192 @@ void GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 		cpu_debug_rep_cont = 0;
 #endif
 		//(*insttable_1byte[CPU_INST_OP32][op])();
-		GEN_CALL_FUNCTION((UINT64)*insttable_1byte[CPU_INST_OP32][op]);
-		return;
+		if (op == 0x0f) {
+			GET_PCBYTE(op);
+			if (op == 0x38) {
+				if (CPU_INST_OP32) {
+#ifdef USE_SSSE3
+					if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+						GEN_LOADINT_FUNCTION(1, 0);
+						GEN_CALL_FUNCTION((UINT64)&exception);
+						GEN_RET_FUNCTION();
+						return 1;
+					}
+					else {
+						GET_PCBYTE(op);
+						if (insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32) {
+							//(*insttable_3byte660F38_32[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_3byte660F38_32[op]);
+						}
+						else if (insttable_3byteF20F38_32[op] && CPU_INST_REPUSE == 0xf2) {
+							//(*insttable_3byteF20F38_32[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_3byteF20F38_32[op]);
+						}
+						else if (insttable_2byte0F38_32[op]) {
+							//(*insttable_2byte0F38_32[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F38_32[op]);
+						}
+						else {
+							GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+							GEN_LOADINT_FUNCTION(1, 0);
+							GEN_CALL_FUNCTION((UINT64)&exception);
+							GEN_RET_FUNCTION();
+							return 1;
+						}
+					}
+#else
+					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+					GEN_LOADINT_FUNCTION(1, 0);
+					GEN_CALL_FUNCTION((UINT64)&exception);
+					GEN_RET_FUNCTION();
+					return 1;
+#endif
+				}
+				else {
+#ifdef USE_SSSE3
+					if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+						GEN_LOADINT_FUNCTION(1, 0);
+						GEN_CALL_FUNCTION((UINT64)&exception);
+						GEN_RET_FUNCTION();
+						return 1;
+					}
+					else {
+						GET_PCBYTE(op);
+						if (insttable_3byte660F38_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32) {
+							//(*insttable_3byte660F38_32[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_3byte660F38_32[op]);
+						}
+						else if (insttable_3byteF20F38_16[op] && CPU_INST_REPUSE == 0xf2) {
+							//(*insttable_3byteF20F38_16[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_3byteF20F38_16[op]);
+						}
+						else if (insttable_2byte0F38_32[op]) {
+							//(*insttable_2byte0F38_32[op])();
+							GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F38_32[op]);
+						}
+						else {
+							GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+							GEN_LOADINT_FUNCTION(1, 0);
+							GEN_CALL_FUNCTION((UINT64)&exception);
+							GEN_RET_FUNCTION();
+							return 1;
+						}
+						CPU_EIP += _getmodrmsize(op, 2);
+						return 0;
+					}
+#else
+					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+					GEN_LOADINT_FUNCTION(1, 0);
+					GEN_CALL_FUNCTION((UINT64)&exception);
+					GEN_RET_FUNCTION();
+					return 1;
+#endif
+				}
+				GEN_RET_FUNCTION();
+				return 1;
+			}
+			else if (op == 0x3a) {
+#ifdef USE_SSSE3
+				if (!(i386cpuid.cpu_feature_ecx & CPU_FEATURE_ECX_SSSE3)) {
+					GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+					GEN_LOADINT_FUNCTION(1, 0);
+					GEN_CALL_FUNCTION((UINT64)&exception);
+					GEN_RET_FUNCTION();
+					return 1;
+				}
+				else {
+					GET_PCBYTE(op);
+					if (insttable_3byte660F3A_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32) {
+						//(*insttable_3byte660F3A_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_3byte660F3A_32[op]);
+					}
+					else if (insttable_2byte0F3A_32[op]) {
+						//(*insttable_2byte0F3A_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byte0F3A_32[op]);
+					}
+					else {
+						GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+						GEN_LOADINT_FUNCTION(1, 0);
+						GEN_CALL_FUNCTION((UINT64)&exception);
+						GEN_RET_FUNCTION();
+						return 1;
+					}
+					CPU_EIP += _getmodrmsize(op, 3);
+					return 0;
+				}
+#else
+				GEN_LOADINT_FUNCTION(0, UD_EXCEPTION);
+				GEN_LOADINT_FUNCTION(1, 0);
+				GEN_CALL_FUNCTION((UINT64)&exception);
+				GEN_RET_FUNCTION();
+				return 1;
+#endif
+				GEN_RET_FUNCTION();
+				return 1;
+			}
+			else {
+				if (CPU_INST_OP32) {
+#ifdef USE_SSE
+					if (insttable_2byte660F_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32) {
+						//(*insttable_2byte660F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byte660F_32[op]);
+					}
+					else if (insttable_2byteF20F_32[op] && CPU_INST_REPUSE == 0xf2) {
+						//(*insttable_2byteF20F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byteF20F_32[op]);
+					}
+					else if (insttable_2byteF30F_32[op] && CPU_INST_REPUSE == 0xf3) {
+						//(*insttable_2byteF30F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byteF30F_32[op]);
+					}
+					else {
+						//(*insttable_2byte[1][op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byte[1][op]);
+					}
+#else
+					//(*insttable_2byte[1][op])();
+					GEN_CALL_FUNCTION((UINT64)*insttable_2byte[1][op]);
+#endif
+				}
+				else {
+#ifdef USE_SSE
+					if (insttable_2byte660F_32[op] && CPU_INST_OP32 == !CPU_STATSAVE.cpu_inst_default.op_32) {
+						//(*insttable_2byte660F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byte660F_32[op]);
+					}
+					else if (insttable_2byteF20F_32[op] && CPU_INST_REPUSE == 0xf2) {
+						//(*insttable_2byteF20F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byteF20F_32[op]);
+					}
+					else if (insttable_2byteF30F_32[op] && CPU_INST_REPUSE == 0xf3) {
+						//(*insttable_2byteF30F_32[op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byteF30F_32[op]);
+					}
+					else {
+						//(*insttable_2byte[0][op])();
+						GEN_CALL_FUNCTION((UINT64)*insttable_2byte[0][op]);
+					}
+#else
+					//(*insttable_2byte[0][op])();
+					GEN_CALL_FUNCTION((UINT64)*insttable_2byte[0][op]);
+#endif
+				}
+				CPU_EIP += _getmodrmsize(op, 1);
+				if ((op >= 0x80 && op <= 0x8f) || op == 0xaa || isretreqired(op, 1)) { GEN_RET_FUNCTION(); return 1; }
+			}
+		}
+		else {
+			GEN_CALL_FUNCTION((UINT64)*insttable_1byte[CPU_INST_OP32][op]);
+			CPU_EIP += _getmodrmsize(op, 0);
+			if ((op >= 0x70 && op <= 0x7f) || op == 0x9a || op == 0xc2 || op == 0xc3 || (op >= 0xca && op <= 0xcf) || (op >= 0xd8 && op <= 0xdf) || (op >= 0xe0 && op <= 0xe3) || (op >= 0xe8 && op <= 0xeb) || op == 0xf4 || op == 0xff || isretreqired(op, 0)) { GEN_RET_FUNCTION(); return 1; }
+		}
+		return 0;
 	}
 
 	/* rep */
-	CPU_WORKCLOCK(5);
+	//CPU_WORKCLOCK(5);
 #if defined(DEBUG)
 	if (!cpu_debug_rep_cont) {
 		cpu_debug_rep_cont = 1;
@@ -1295,51 +1657,21 @@ void GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 		if (CPU_CX != 0) {
 			if (!(insttable_info[op] & REP_CHECKZF)) {
 				/* rep */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_CX == 0) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_rep16);
 			}
 			else if (CPU_INST_REPUSE != 0xf2) {
 				/* repe */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_CX == 0 || CC_NZ) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_repe16);
 			}
 			else {
 				/* repne */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_CX == 0 || CC_Z) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_repne16);
 			}
 		}
 	}
@@ -1347,52 +1679,24 @@ void GenNativecode(UINT64* pos, UINT32 targetopcode,UINT8 targetbitlength) {
 		if (CPU_ECX != 0) {
 			if (!(insttable_info[op] & REP_CHECKZF)) {
 				/* rep */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_ECX == 0) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_rep32);
 			}
 			else if (CPU_INST_REPUSE != 0xf2) {
 				/* repe */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_ECX == 0 || CC_NZ) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_repe32);
 			}
 			else {
 				/* repne */
-				for (;;) {
-					(*insttable_1byte[CPU_INST_OP32][op])();
-					if (--CPU_ECX == 0 || CC_Z) {
-#if defined(DEBUG)
-						cpu_debug_rep_cont = 0;
-#endif
-						break;
-					}
-					if (CPU_REMCLOCK <= 0) {
-						CPU_EIP = CPU_PREV_EIP;
-						break;
-					}
-				}
+				GEN_LOADINT_FUNCTION(0, CPU_INST_OP32);
+				GEN_LOADINT_FUNCTION(1, op);
+				GEN_CALL_FUNCTION((UINT64)&_aot_repne32);
 			}
 		}
 	}
+	GEN_RET_FUNCTION();
+	return 1;
 }
