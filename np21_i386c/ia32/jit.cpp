@@ -50,6 +50,8 @@
 #endif
 #endif
 
+#include "jit.h"
+
 //syntax : 2byte|prefix|callgate|opcodetogetimm|invalidop|priviledged|imm16/32bytest|imm8bytest|7|6|5|4|3|2|1|0|unused7|unused6|unused5|unused4|unused3|unused2|unused1|unused0|sse+(NO AS MMX)|imm16|offset16/32|offset8|imm16/32|imm8|modrm16/32|modrm8
 UINT32 opcodeoperantsizedesc[4][256] = {
 	{ // prim op
@@ -1794,17 +1796,19 @@ inline void InsertRettoJITC(UINT64* pos) {
 typedef void function4xecutejited();
 
 UINT32 exec_jit() {
+	UINT64 jitptx = (UINT64)VirtualAlloc(0, 655360, 0x3000, 0x40);
 	do {
-		UINT64 jitptx = (UINT64)VirtualAlloc(0, 655360, 0x3000, 0x40);
 		UINT64 jitptxlast = jitptx;
 		UINT64 eipbak = CPU_EIP;
-		while (GenNativecode(&jitptxlast) == true) {
-			if ((jitptxlast - jitptx) >= 651296) { break; }
+		while (true) {
+			bool isret = GenNativecode(&jitptxlast);
+			if (((jitptxlast - jitptx) >= 651296) || isret == false) { break; }
 		}
 		CPU_EIP = eipbak;
 		InsertRettoJITC(&jitptxlast);
 		FlushInstructionCache(GetCurrentProcess(), (void*)jitptx, 655360);
 		((function4xecutejited*)(jitptx))();
 	} while (CPU_REMCLOCK > 0);
+	VirtualFree((void*)jitptx,655360,0x8000);
 	return CPU_REMCLOCK;
 }
