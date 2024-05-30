@@ -1587,6 +1587,7 @@ void _aot_repne32(UINT8 op32_byte, UINT8 op_byte) {
 	}
 }
 
+#if 0
 inline bool GenNativecode(UINT64 pos) {
 	int prefix;
 	UINT32 op;
@@ -2017,6 +2018,7 @@ inline void InsertexecallsteptoJITC(UINT64 pos) {
 inline void Insertexec1steptoJITC(UINT64 pos) {
 	GEN_CALL_FUNCTION((UINT64)&exec_1step)
 }
+#endif
 
 typedef void function4xecutejited();
 
