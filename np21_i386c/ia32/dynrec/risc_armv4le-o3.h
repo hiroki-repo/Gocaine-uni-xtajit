@@ -367,7 +367,7 @@ static bool gen_mov_memval_to_reg_helper(HostReg dest_reg, uint32_t data, Bitu s
 
 // helper function
 static bool gen_mov_memval_to_reg(HostReg dest_reg, void *data, Bitu size) {
-	if (gen_mov_memval_to_reg_helper(dest_reg, (uint32_t)data, size, FC_REGS_ADDR, (uint32_t)&cpu_regs)) return true;
+	if (gen_mov_memval_to_reg_helper(dest_reg, (uint32_t)data, size, FC_REGS_ADDR, (uint32_t)&CPU_STATSAVE.cpu_regs.reg)) return true;
 	if (gen_mov_memval_to_reg_helper(dest_reg, (uint32_t)data, size, readdata_addr, (uint32_t)&core_dynrec.readdata)) return true;
 	if (gen_mov_memval_to_reg_helper(dest_reg, (uint32_t)data, size, FC_SEGS_ADDR, (uint32_t)&Segs)) return true;
 	return false;
@@ -471,7 +471,7 @@ static bool gen_mov_memval_from_reg_helper(HostReg src_reg, uint32_t data, Bitu 
 
 // helper function
 static bool gen_mov_memval_from_reg(HostReg src_reg, void *dest, Bitu size) {
-	if (gen_mov_memval_from_reg_helper(src_reg, (uint32_t)dest, size, FC_REGS_ADDR, (uint32_t)&cpu_regs)) return true;
+	if (gen_mov_memval_from_reg_helper(src_reg, (uint32_t)dest, size, FC_REGS_ADDR, (uint32_t)&CPU_STATSAVE.cpu_regs.reg)) return true;
 	if (gen_mov_memval_from_reg_helper(src_reg, (uint32_t)dest, size, readdata_addr, (uint32_t)&core_dynrec.readdata)) return true;
 	if (gen_mov_memval_from_reg_helper(src_reg, (uint32_t)dest, size, FC_SEGS_ADDR, (uint32_t)&Segs)) return true;
 	return false;
@@ -917,8 +917,8 @@ static void gen_run_code(void) {
 	cache_addd( MOVW(FC_SEGS_ADDR, ((uint32_t)&Segs) & 0xffff) );      // movw FC_SEGS_ADDR, #(&Segs & 0xffff)
 	cache_addd( MOVT(FC_SEGS_ADDR, ((uint32_t)&Segs) >> 16) );      // movt FC_SEGS_ADDR, #(&Segs >> 16)
 
-	cache_addd( MOVW(FC_REGS_ADDR, ((uint32_t)&cpu_regs) & 0xffff) );      // movw FC_REGS_ADDR, #(&cpu_regs & 0xffff)
-	cache_addd( MOVT(FC_REGS_ADDR, ((uint32_t)&cpu_regs) >> 16) );      // movt FC_REGS_ADDR, #(&cpu_regs >> 16)
+	cache_addd( MOVW(FC_REGS_ADDR, ((uint32_t)&CPU_STATSAVE.cpu_regs.reg) & 0xffff) );      // movw FC_REGS_ADDR, #(&cpu_regs & 0xffff)
+	cache_addd( MOVT(FC_REGS_ADDR, ((uint32_t)&CPU_STATSAVE.cpu_regs.reg) >> 16) );      // movt FC_REGS_ADDR, #(&cpu_regs >> 16)
 
 	cache_addd( MOVW(readdata_addr, ((Bitu)&core_dynrec.readdata) & 0xffff) );      // movw readdata_addr, #(&core_dynrec.readdata & 0xffff)
 	cache_addd( MOVT(readdata_addr, ((Bitu)&core_dynrec.readdata) >> 16) );      // movt readdata_addr, #(&core_dynrec.readdata >> 16)
@@ -947,7 +947,7 @@ static void gen_run_code(void) {
 	cache_addd((uint32_t)&Segs);      // address of "Segs"
 
 	*(uint32_t*)pos2 = LDR_IMM(FC_REGS_ADDR, HOST_pc, cache.pos - (pos2 + 8));      // ldr FC_REGS_ADDR, [pc, #(&cpu_regs)]
-	cache_addd((uint32_t)&cpu_regs);  // address of "cpu_regs"
+	cache_addd((uint32_t)&CPU_STATSAVE.cpu_regs.reg);  // address of "cpu_regs"
 
 	*(uint32_t*)pos3 = LDR_IMM(readdata_addr, HOST_pc, cache.pos - (pos3 + 8));      // ldr readdata_addr, [pc, #(&core_dynrec.readdata)]
 	cache_addd((uint32_t)&core_dynrec.readdata);  // address of "core_dynrec.readdata"

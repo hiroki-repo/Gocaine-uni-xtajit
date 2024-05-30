@@ -409,7 +409,7 @@ static bool gen_mov_memval_to_reg_helper(HostReg dest_reg, uint64_t data, Bitu s
 
 // helper function
 static bool gen_mov_memval_to_reg(HostReg dest_reg, void *data, Bitu size) {
-	if (gen_mov_memval_to_reg_helper(dest_reg, (uint64_t)data, size, FC_REGS_ADDR, (uint64_t)&cpu_regs)) return true;
+	if (gen_mov_memval_to_reg_helper(dest_reg, (uint64_t)data, size, FC_REGS_ADDR, (uint64_t)&CPU_STATSAVE.cpu_regs.reg)) return true;
 	if (gen_mov_memval_to_reg_helper(dest_reg, (uint64_t)data, size, readdata_addr, (uint64_t)&core_dynrec.readdata)) return true;
 	if (gen_mov_memval_to_reg_helper(dest_reg, (uint64_t)data, size, FC_SEGS_ADDR, (uint64_t)&Segs)) return true;
 	return false;
@@ -522,7 +522,7 @@ static bool gen_mov_memval_from_reg_helper(HostReg src_reg, uint64_t data, Bitu 
 
 // helper function
 static bool gen_mov_memval_from_reg(HostReg src_reg, void *dest, Bitu size) {
-	if (gen_mov_memval_from_reg_helper(src_reg, (uint64_t)dest, size, FC_REGS_ADDR, (uint64_t)&cpu_regs)) return true;
+	if (gen_mov_memval_from_reg_helper(src_reg, (uint64_t)dest, size, FC_REGS_ADDR, (uint64_t)&CPU_STATSAVE.cpu_regs.reg)) return true;
 	if (gen_mov_memval_from_reg_helper(src_reg, (uint64_t)dest, size, readdata_addr, (uint64_t)&core_dynrec.readdata)) return true;
 	if (gen_mov_memval_from_reg_helper(src_reg, (uint64_t)dest, size, FC_SEGS_ADDR, (uint64_t)&Segs)) return true;
 	return false;
@@ -906,7 +906,7 @@ static void gen_run_code(void) {
 	cache_addq((uint64_t)&Segs);                      // address of "Segs"
 
 	*(uint32_t *)pos2 = LDR64_PC(FC_REGS_ADDR, cache.pos - pos2);   // ldr FC_REGS_ADDR, [pc, #(&cpu_regs)]
-	cache_addq((uint64_t)&cpu_regs);                  // address of "cpu_regs"
+	cache_addq((uint64_t)&CPU_STATSAVE.cpu_regs.reg);                  // address of "cpu_regs"
 
 	*(uint32_t *)pos3 = LDR64_PC(readdata_addr, cache.pos - pos3);  // ldr readdata_addr, [pc, #(&core_dynrec.readdata)]
 	cache_addq((uint64_t)&core_dynrec.readdata);      // address of "core_dynrec.readdata"

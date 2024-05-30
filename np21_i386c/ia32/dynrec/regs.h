@@ -93,8 +93,11 @@ struct CPU_Regs {
 	Bitu flags;
 };
 
-extern Segments Segs;
-extern CPU_Regs cpu_regs;
+//extern Segments Segs;
+//extern CPU_Regs cpu_regs;
+
+#define Segs CPU_STATSAVE.cpu_regs.sreg
+//#define cpu_regs CPU_STATSAVE.cpu_regs.reg
 
 static INLINE PhysPt SegLimit(SegNames index) {
 	return CPU_STATSAVE.cpu_stat.sreg[index].u.seg.limit;

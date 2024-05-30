@@ -411,22 +411,22 @@ static void INLINE dyn_get_modrm(void) {
 
 #ifdef DRC_USE_REGS_ADDR
 
-#define MOV_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define ADD_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_add_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define ADD_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_add_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
 
-#define MOV_REG_WORD16_TO_HOST_REG(host_reg, reg_index) gen_mov_regval16_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_WORD32_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_WORD_TO_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&cpu_regs), dword)
+#define MOV_REG_WORD16_TO_HOST_REG(host_reg, reg_index) gen_mov_regval16_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_WORD32_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_WORD_TO_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg), dword)
 
-#define MOV_REG_WORD16_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval16_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_WORD32_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval32_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_WORD_FROM_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&cpu_regs), dword)
+#define MOV_REG_WORD16_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval16_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_WORD32_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval32_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_WORD_FROM_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg), dword)
 
-#define MOV_REG_BYTE_TO_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low_canuseword(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
-#define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_from_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_BYTE_TO_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low_canuseword(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
+#define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_from_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
 
-#define MOV_FLAGS_TO_HOST_REG(host_reg) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_FLAGS) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_FLAGS_TO_HOST_REG(host_reg) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_FLAGS) - (DRC_PTR_SIZE_IM)(&CPU_STATSAVE.cpu_regs.reg))
 
 #else
 
@@ -857,7 +857,7 @@ static void dyn_lea_mem_mem(HostReg ea_reg,void* op1,void* op2,Bitu scale,Bits i
 #ifdef DRC_USE_REGS_ADDR
 // effective address calculation helper
 // loads op1 into ea_reg and adds the scaled op2 and the immediate to it
-// op1 is cpu_regs[op1_index], op2 is cpu_regs[op2_index] 
+// op1 is CPU_STATSAVE.cpu_regs.reg[op1_index], op2 is CPU_STATSAVE.cpu_regs.reg[op2_index] 
 static void dyn_lea_regval_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,Bitu scale,Bits imm) {
 	if (scale || imm) {
 		MOV_REG_VAL_TO_HOST_REG(ea_reg,op1_index);
@@ -872,7 +872,7 @@ static void dyn_lea_regval_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,B
 
 // effective address calculation helper
 // loads op1 into ea_reg and adds the scaled op2 and the immediate to it
-// op2 is cpu_regs[op2_index] 
+// op2 is CPU_STATSAVE.cpu_regs.reg[op2_index] 
 static void dyn_lea_mem_regval(HostReg ea_reg,void* op1,Bitu op2_index,Bitu scale,Bits imm) {
 	if (scale || imm) {
 		if (op1!=NULL) {
@@ -895,7 +895,7 @@ static void dyn_lea_mem_regval(HostReg ea_reg,void* op1,Bitu op2_index,Bitu scal
 #ifdef DRC_USE_REGS_ADDR
 // effective address calculation helper
 // loads op1 into ea_reg and adds the scaled op2 and the immediate to it
-// op1 is Segs[op1_index], op2 is cpu_regs[op2_index] 
+// op1 is Segs[op1_index], op2 is CPU_STATSAVE.cpu_regs.reg[op2_index] 
 static void dyn_lea_segphys_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,Bitu scale,Bits imm) {
 	if (scale || imm) {
 		MOV_SEG_PHYS_TO_HOST_REG(ea_reg,op1_index);

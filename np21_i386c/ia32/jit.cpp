@@ -2808,7 +2808,8 @@ UINT64 exec_jit() {
 				cpu_cycles_count_t old_cycles = CPU_Cycles;
 				CPU_Cycles = 1;
 				CPU_CycleLeft += old_cycles;
-				Bits nc_retcode = CPU_Core_Normal_Run();
+				exec_1step();
+				Bits nc_retcode = 0;//CPU_Core_Normal_Run();
 				if (!nc_retcode) {
 					CPU_Cycles = old_cycles - 1;
 					CPU_CycleLeft -= old_cycles;
@@ -3259,11 +3260,665 @@ void CPU_LIDT(Bitu limit, Bitu base) {
 	EXCEPTION(GP_EXCEPTION, 0);
 }
 
+Bitu CPU_SGDT_base(void) {
+	return CPU_GDTR_BASE;
+}
+Bitu CPU_SGDT_limit(void) {
+	return CPU_GDTR_LIMIT;
+}
+
+Bitu CPU_SIDT_base(void) {
+	return CPU_IDTR_BASE;
+}
+Bitu CPU_SIDT_limit(void) {
+	return CPU_IDTR_LIMIT;
+}
+
+bool CPU_LLDT(Bitu selector) {
+	int exc = GP_EXCEPTION;
+	selector_t sel;
+	int rv;
+	if (CPU_STAT_PM && !CPU_STAT_VM86) {
+		if (CPU_STAT_CPL == 0) {
+
+			memset(&sel, 0, sizeof(sel));
+
+			rv = parse_selector(&sel, selector);
+			if (rv < 0 || sel.ldt) {
+				if (rv == -2) {
+					/* null segment */
+					VERBOSE(("load_ldtr: null segment"));
+					CPU_LDTR = 0;
+					memset(&CPU_LDTR_DESC, 0, sizeof(CPU_LDTR_DESC));
+					return false;
+				}
+				EXCEPTION(exc, sel.selector);
+				return true;
+			}
+
+			/* check descriptor type */
+			if (!SEG_IS_SYSTEM(&sel.desc)
+				|| (sel.desc.type != CPU_SYSDESC_TYPE_LDT)) {
+				EXCEPTION(exc, sel.selector);
+				return true;
+			}
+
+			/* not present */
+			rv = selector_is_not_present(&sel);
+			if (rv < 0) {
+				EXCEPTION((exc == TS_EXCEPTION) ? TS_EXCEPTION : NP_EXCEPTION, sel.selector);
+				return true;
+			}
+
+#if defined(MORE_DEBUG)
+			ldtr_dump(sel.desc.u.seg.segbase, sel.desc.u.seg.limit);
+#endif
+
+			CPU_LDTR = sel.selector;
+			CPU_LDTR_DESC = sel.desc;
+			return false;
+		}
+		VERBOSE(("LLDT: CPL(%d) != 0", CPU_STAT_CPL));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+	VERBOSE(("LLDT: real-mode or VM86"));
+	EXCEPTION(UD_EXCEPTION, 0);
+	return true;
+}
+
+void CPU_VERW(Bitu selector) {
+	selector_t sel;
+	int rv;
+	if (CPU_STAT_PM && !CPU_STAT_VM86) {
+		rv = parse_selector(&sel, selector);
+		if (rv < 0) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+
+		/* system segment || code segment */
+		if (SEG_IS_SYSTEM(&sel.desc) || SEG_IS_CODE(&sel.desc)) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+		/* data segment is not writable */
+		if (!SEG_IS_WRITABLE_DATA(&sel.desc)) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+		/* privilege level */
+		if ((CPU_STAT_CPL > sel.desc.dpl) || (sel.rpl > sel.desc.dpl)) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+
+		CPU_FLAGL |= Z_FLAG;
+		return;
+	}
+	VERBOSE(("VERW: real-mode or VM86"));
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
 void CPU_SetFlags(Bitu word, Bitu mask) {
 	set_eflags(word, mask);
 }
 
 void E_Exit(const char* format, ...) {
+}
+
+bool mem_unalignedreadw_checked(PhysPt address, uint16_t* val) {
+	uint8_t rval1, rval2;
+	if (mem_readb_checked(address + 0, &rval1)) return true;
+	if (mem_readb_checked(address + 1, &rval2)) return true;
+	*val = (uint16_t)(rval1 | (rval2 << 8));
+	return false;
+}
+
+bool mem_unalignedreadd_checked(PhysPt address, uint32_t* val) {
+	uint8_t rval1, rval2, rval3, rval4;
+	if (mem_readb_checked(address + 0, &rval1)) return true;
+	if (mem_readb_checked(address + 1, &rval2)) return true;
+	if (mem_readb_checked(address + 2, &rval3)) return true;
+	if (mem_readb_checked(address + 3, &rval4)) return true;
+	*val = (uint32_t)(rval1 | (rval2 << 8) | (rval3 << 16) | (rval4 << 24));
+	return false;
+}
+
+bool mem_unalignedwritew_checked(PhysPt address, uint16_t val) {
+	if (mem_writeb_checked(address, (uint8_t)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address + 1, (uint8_t)(val & 0xff))) return true;
+	return false;
+}
+
+bool mem_unalignedwrited_checked(PhysPt address, uint32_t val) {
+	if (mem_writeb_checked(address, (uint8_t)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address + 1, (uint8_t)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address + 2, (uint8_t)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address + 3, (uint8_t)(val & 0xff))) return true;
+	return false;
+}
+
+bool CPU_IO_Exception(Bitu port, Bitu len) {
+	UINT off;
+	UINT16 map;
+	UINT16 mask;
+
+	if (CPU_STAT_IOLIMIT == 0) {
+		VERBOSE(("check_io: CPU_STAT_IOLIMIT == 0 (port = %04x, len = %d)", port, len));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+
+	if ((port + len) / 8 >= CPU_STAT_IOLIMIT) {
+		VERBOSE(("check_io: out of range: CPU_STAT_IOLIMIT(%08x) (port = %04x, len = %d)", CPU_STAT_IOLIMIT, port, len));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+
+	off = port / 8;
+	mask = ((1 << len) - 1) << (port % 8);
+	map = cpu_kmemoryread_w(CPU_STAT_IOADDR + off);
+	if (map & mask) {
+		VERBOSE(("check_io: (bitmap(0x%04x) & bit(0x%04x)) != 0 (CPU_STAT_IOADDR=0x%08x, offset=0x%04x, port = 0x%04x, len = %d)", map, mask, CPU_STAT_IOADDR, off, port, len));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+	return false;
+}
+
+void CPU_VERR(Bitu selector) {
+	selector_t sel;
+	int rv;
+	if (CPU_STAT_PM && !CPU_STAT_VM86) {
+		rv = parse_selector(&sel, selector);
+		if (rv < 0) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+
+		/* system segment */
+		if (SEG_IS_SYSTEM(&sel.desc)) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+
+		/* data or non-conforming code segment */
+		if ((SEG_IS_DATA(&sel.desc)
+			|| !SEG_IS_CONFORMING_CODE(&sel.desc))) {
+			if ((sel.desc.dpl < CPU_STAT_CPL)
+				|| (sel.desc.dpl < sel.rpl)) {
+				CPU_FLAGL &= ~Z_FLAG;
+				return;
+			}
+		}
+		/* code segment is not readable */
+		if (SEG_IS_CODE(&sel.desc)
+			&& !SEG_IS_READABLE_CODE(&sel.desc)) {
+			CPU_FLAGL &= ~Z_FLAG;
+			return;
+		}
+
+		CPU_FLAGL |= Z_FLAG;
+		return;
+	}
+	VERBOSE(("VERR: real-mode or VM86"));
+	EXCEPTION(UD_EXCEPTION, 0);
+}
+
+void CPU_Push16(uint16_t value) {
+	CPU_WORKCLOCK(3); PUSH0_16(value);
+}
+void CPU_Push32(uint32_t value) {
+	CPU_WORKCLOCK(3); PUSH0_32(value);
+}
+
+Bitu CPU_SMSW(void) {
+	return CPU_CR0;
+}
+
+void CPU_RET(bool use32, Bitu bytes, uint32_t oldeip) {
+	descriptor_t sd;
+	UINT32 new_ip;
+	UINT32 new_cs;
+	UINT16 sreg;
+	if (!use32) {
+		//16bit
+		CPU_WORKCLOCK(15);
+		if (!CPU_STAT_PM || CPU_STAT_VM86) {
+			/* Real mode or VM86 mode */
+			CPU_SET_PREV_ESP();
+			POP0_16(new_ip);
+			POP0_16(new_cs);
+
+			/* check new instrunction pointer with new code segment */
+			load_segreg(CPU_CS_INDEX, new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+
+			LOAD_SEGREG(CPU_CS_INDEX, new_cs);
+			CPU_EIP = new_ip;
+			CPU_CLEAR_PREV_ESP();
+		}
+		else {
+			/* Protected mode */
+			RETfar_pm(0);
+		}
+	}
+	else {
+		//32bit
+		CPU_WORKCLOCK(15);
+		if (!CPU_STAT_PM || CPU_STAT_VM86) {
+			/* Real mode or VM86 mode */
+			CPU_SET_PREV_ESP();
+			POP0_32(new_ip);
+			POP0_32(new_cs);
+
+			/* check new instrunction pointer with new code segment */
+			load_segreg(CPU_CS_INDEX, (UINT16)new_cs, &sreg, &sd, GP_EXCEPTION);
+			if (new_ip > sd.u.seg.limit) {
+				EXCEPTION(GP_EXCEPTION, 0);
+			}
+
+			LOAD_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
+			CPU_EIP = new_ip;
+			CPU_CLEAR_PREV_ESP();
+		}
+		else {
+			/* Protected mode */
+			RETfar_pm(0);
+		}
+	}
+}
+
+uint16_t CPU_Pop16(void) {
+	uint16_t Retvalue = 0;
+	CPU_WORKCLOCK(5); POP0_16(Retvalue);
+	return Retvalue;
+}
+uint32_t CPU_Pop32(void) {
+	uint32_t Retvalue = 0;
+	CPU_WORKCLOCK(5); POP0_32(Retvalue);
+	return Retvalue;
+}
+
+/* dynamic core, policy, method, and flags.
+ * We're going to make dynamic core more flexible, AND make sure
+ * that both dynx86 and dynrec are using common memory mapping
+ * code to reduce copy-pasta */
+dyncore_alloc_t         dyncore_alloc = DYNCOREALLOC_NONE;
+dyncore_method_t        dyncore_method = DYNCOREM_NONE;
+dyncore_flags_t         dyncore_flags = 0;
+
+void CPU_Interrupt(Bitu num, Bitu type, uint32_t oldeip) {
+	CPU_EIP = oldeip;
+	switch (type) {
+	case CPU_INT_SOFTWARE:
+		INTERRUPT(num, INTR_TYPE_SOFTINTR);
+		break;
+	case CPU_INT_EXCEPTION:
+		INTERRUPT(num, INTR_TYPE_EXCEPTION);
+		break;
+	default:
+		INTERRUPT(num, INTR_TYPE_EXTINTR);
+		break;
+	}
+}
+
+bool CPU_WRITE_CRX(Bitu cr, Bitu value) {
+	UINT32 op, src;
+	UINT32 reg;
+	int idx;
+
+	CPU_WORKCLOCK(11);
+	if (CPU_STAT_PM && (CPU_STAT_VM86 || CPU_STAT_CPL != 0)) {
+		VERBOSE(("MOV_CdRd: VM86(%s) or CPL(%d) != 0", CPU_STAT_VM86 ? "true" : "false", CPU_STAT_CPL));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+
+	src = *(reg32_b20[op]);
+	idx = (op >> 3) & 7;
+
+	switch (idx) {
+	case 0: /* CR0 */
+		/*
+		 * 0 = PE (protect enable)
+		 * 1 = MP (monitor coprocesser)
+		 * 2 = EM (emulation)
+		 * 3 = TS (task switch)
+		 * 4 = ET (extend type, FPU present = 1)
+		 * 5 = NE (numeric error)
+		 * 16 = WP (write protect)
+		 * 18 = AM (alignment mask)
+		 * 29 = NW (not write-through)
+		 * 30 = CD (cache diable)
+		 * 31 = PG (pageing)
+		 */
+
+		 /* 下巻 p.182 割り込み 13 - 一般保護例外 */
+		if ((src & (CPU_CR0_PE | CPU_CR0_PG)) == (UINT32)CPU_CR0_PG) {
+			EXCEPTION(GP_EXCEPTION, 0);
+			return true;
+		}
+		if ((src & (CPU_CR0_NW | CPU_CR0_CD)) == CPU_CR0_NW) {
+			EXCEPTION(GP_EXCEPTION, 0);
+			return true;
+		}
+
+		reg = CPU_CR0;
+		src &= CPU_CR0_ALL;
+#if defined(USE_FPU)
+		if (i386cpuid.cpu_feature & CPU_FEATURE_FPU) {
+			src |= CPU_CR0_ET;	/* FPU present */
+			//src &= ~CPU_CR0_EM;
+		}
+		else {
+			src |= CPU_CR0_EM | CPU_CR0_NE;
+			src &= ~(CPU_CR0_MP | CPU_CR0_ET);
+		}
+#else
+		src |= CPU_CR0_EM | CPU_CR0_NE;
+		src &= ~(CPU_CR0_MP | CPU_CR0_ET);
+#endif
+		CPU_CR0 = src;
+		VERBOSE(("MOV_CdRd: %04x:%08x: cr0: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR0, reg32_str[op & 7]));
+
+		if ((reg ^ CPU_CR0) & (CPU_CR0_PE | CPU_CR0_PG)) {
+			tlb_flush_all();
+		}
+		if ((reg ^ CPU_CR0) & CPU_CR0_PE) {
+			if (CPU_CR0 & CPU_CR0_PE) {
+				change_pm(1);
+			}
+		}
+		if ((reg ^ CPU_CR0) & CPU_CR0_PG) {
+			if (CPU_CR0 & CPU_CR0_PG) {
+				change_pg(1);
+			}
+			else {
+				change_pg(0);
+			}
+		}
+		if ((reg ^ CPU_CR0) & CPU_CR0_PE) {
+			if (!(CPU_CR0 & CPU_CR0_PE)) {
+				change_pm(0);
+			}
+		}
+
+		CPU_STAT_WP = (CPU_CR0 & CPU_CR0_WP) ? 0x10 : 0;
+		break;
+
+	case 2: /* CR2 */
+		reg = CPU_CR2;
+		CPU_CR2 = src;	/* page fault linear address */
+		VERBOSE(("MOV_CdRd: %04x:%08x: cr2: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR2, reg32_str[op & 7]));
+		break;
+
+	case 3: /* CR3 */
+		/*
+		 * 31-12 = page directory base
+		 * 4 = PCD (page level cache diable)
+		 * 3 = PWT (page level write throgh)
+		 */
+		reg = CPU_CR3;
+		set_cr3(src);
+		VERBOSE(("MOV_CdRd: %04x:%08x: cr3: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR3, reg32_str[op & 7]));
+		break;
+
+	case 4: /* CR4 */
+		/*
+		 * 10 = OSXMMEXCPT (support non masking exception by OS)
+		 * 9 = OSFXSR (support FXSAVE, FXRSTOR by OS)
+		 * 8 = PCE (performance monitoring counter enable)
+		 * 7 = PGE (page global enable)
+		 * 6 = MCE (machine check enable)
+		 * 5 = PAE (physical address extention)
+		 * 4 = PSE (page size extention)
+		 * 3 = DE (debug extention)
+		 * 2 = TSD (time stamp diable)
+		 * 1 = PVI (protected mode virtual interrupt)
+		 * 0 = VME (VM8086 mode extention)
+		 */
+		reg = 0		/* allow bit */
+#if (CPU_FEATURES & CPU_FEATURE_PGE) == CPU_FEATURE_PGE
+			| CPU_CR4_PGE
+#endif
+#if (CPU_FEATURES & CPU_FEATURE_VME) == CPU_FEATURE_VME
+			| CPU_CR4_PVI | CPU_CR4_VME
+#endif
+#if (CPU_FEATURES & CPU_FEATURE_FXSR) == CPU_FEATURE_FXSR
+			| CPU_CR4_OSFXSR
+#endif
+#if (CPU_FEATURES & CPU_FEATURE_SSE) == CPU_FEATURE_SSE
+			| CPU_CR4_OSXMMEXCPT
+#endif
+			| CPU_CR4_PCE
+			;
+		if (src & ~reg) {
+			//if (src & 0xfffffc00) {
+			if (src & 0xfffff800) {
+				EXCEPTION(GP_EXCEPTION, 0);
+				return true;
+			}
+			if ((src & ~reg) != CPU_CR4_DE) { // XXX: debug extentionは警告しない
+				ia32_warning("MOV_CdRd: CR4 <- 0x%08x", src);
+			}
+		}
+
+		reg = CPU_CR4;
+		CPU_CR4 = src;
+		VERBOSE(("MOV_CdRd: %04x:%08x: cr4: 0x%08x <- 0x%08x(%s)", CPU_CS, CPU_PREV_EIP, reg, CPU_CR4, reg32_str[op & 7]));
+
+		if ((reg ^ CPU_CR4) & (CPU_CR4_PSE | CPU_CR4_PGE | CPU_CR4_PAE | CPU_CR4_PVI | CPU_CR4_VME | CPU_CR4_OSFXSR | CPU_CR4_OSXMMEXCPT)) {
+			tlb_flush_all();
+		}
+		break;
+
+	default:
+		ia32_panic("MOV_CdRd: CR reg index (%d)", idx);
+		/*NOTREACHED*/
+		return true;
+		break;
+	}
+	return false;
+}
+
+void CPU_ENTER(bool use32, Bitu bytes, Bitu level) {
+	UINT32 sp, bp;
+	UINT32 new_bp;
+	UINT32 val;
+	UINT16 dimsize = bytes;
+	if (!use32) {
+		//16bit
+		level &= 0x1f;
+
+		CPU_SET_PREV_ESP();
+		PUSH0_16(CPU_BP);
+		if (level == 0) {			/* enter level=0 */
+			CPU_WORKCLOCK(11);
+			CPU_BP = CPU_SP;
+			if (!CPU_STAT_SS32) {
+				CPU_SP -= dimsize;
+			}
+			else {
+				CPU_ESP -= dimsize;
+			}
+		}
+		else {
+			--level;
+			if (level == 0) {		/* enter level=1 */
+				CPU_WORKCLOCK(15);
+				sp = CPU_SP;
+				PUSH0_16(sp);
+				CPU_BP = (UINT16)sp;
+				if (!CPU_STAT_SS32) {
+					CPU_SP -= dimsize;
+				}
+				else {
+					CPU_ESP -= dimsize;
+				}
+			}
+			else {			/* enter level=2-31 */
+				CPU_WORKCLOCK(12 + level * 4);
+				if (!CPU_STAT_SS32) {
+					bp = CPU_BP;
+					new_bp = CPU_SP;
+					while (level--) {
+						bp -= 2;
+						CPU_SP -= 2;
+						val = cpu_vmemoryread_w(CPU_SS_INDEX, bp);
+						cpu_vmemorywrite_w(CPU_SS_INDEX, CPU_SP, (UINT16)val);
+					}
+					REGPUSH0(new_bp);
+					CPU_BP = new_bp;
+					CPU_SP -= dimsize;
+				}
+				else {
+					bp = CPU_EBP;
+					new_bp = CPU_SP;
+					while (level--) {
+						bp -= 2;
+						CPU_ESP -= 2;
+						val = cpu_vmemoryread_w(CPU_SS_INDEX, bp);
+						cpu_vmemorywrite_w(CPU_SS_INDEX, CPU_ESP, (UINT16)val);
+					}
+					REGPUSH0_16_32(new_bp);
+					CPU_BP = new_bp;
+					CPU_ESP -= dimsize;
+				}
+			}
+		}
+		CPU_CLEAR_PREV_ESP();
+	}
+	else {
+		//32bit
+		level &= 0x1f;
+
+		CPU_SET_PREV_ESP();
+		PUSH0_32(CPU_EBP);
+		if (level == 0) {			/* enter level=0 */
+			CPU_WORKCLOCK(11);
+			CPU_EBP = CPU_ESP;
+			if (!CPU_STAT_SS32) {
+				CPU_SP -= dimsize;
+			}
+			else {
+				CPU_ESP -= dimsize;
+			}
+		}
+		else {
+			--level;
+			if (level == 0) {		/* enter level=1 */
+				CPU_WORKCLOCK(15);
+				sp = CPU_ESP;
+				PUSH0_32(sp);
+				CPU_EBP = sp;
+				if (CPU_STAT_SS32) {
+					CPU_ESP -= dimsize;
+				}
+				else {
+					CPU_SP -= dimsize;
+				}
+			}
+			else {			/* enter level=2-31 */
+				CPU_WORKCLOCK(12 + level * 4);
+				if (CPU_STAT_SS32) {
+					bp = CPU_EBP;
+					new_bp = CPU_ESP;
+					while (level--) {
+						bp -= 4;
+						CPU_ESP -= 4;
+						val = cpu_vmemoryread_d(CPU_SS_INDEX, bp);
+						cpu_vmemorywrite_d(CPU_SS_INDEX, CPU_ESP, val);
+					}
+					REGPUSH0_32(new_bp);
+					CPU_EBP = new_bp;
+					CPU_ESP -= dimsize;
+				}
+				else {
+					bp = CPU_BP;
+					new_bp = CPU_ESP;
+					while (level--) {
+						bp -= 4;
+						CPU_SP -= 4;
+						val = cpu_vmemoryread_d(CPU_SS_INDEX, bp);
+						cpu_vmemorywrite_d(CPU_SS_INDEX, CPU_SP, val);
+					}
+					REGPUSH0_32_16(new_bp);
+					CPU_EBP = new_bp;
+					CPU_SP -= dimsize;
+				}
+			}
+		}
+		CPU_CLEAR_PREV_ESP();
+	}
+}
+
+void CPU_IRET(bool use32, uint32_t oldeip) {
+	descriptor_t sd;
+	UINT32 new_ip;
+	UINT32 new_flags;
+	UINT32 new_cs;
+	UINT32 mask;
+	UINT16 sreg;
+
+	UINT8 op32bak = CPU_INST_OP32;
+	CPU_INST_OP32 = (use32 ? 1 : 0);
+
+	CPU_WORKCLOCK(22);
+	if (!CPU_STAT_PM) {
+		/* Real mode */
+		CPU_SET_PREV_ESP();
+		mask = I_FLAG | IOPL_FLAG;
+		if (!CPU_INST_OP32) {
+			POP0_16(new_ip);
+			POP0_16(new_cs);
+			POP0_16(new_flags);
+		}
+		else {
+			POP0_32(new_ip);
+			POP0_32(new_cs);
+			POP0_32(new_flags);
+			mask |= RF_FLAG;
+		}
+
+		/* check new instrunction pointer with new code segment */
+		load_segreg(CPU_CS_INDEX, (UINT16)new_cs, &sreg, &sd, GP_EXCEPTION);
+		if (new_ip > sd.u.seg.limit) {
+			EXCEPTION(GP_EXCEPTION, 0);
+		}
+
+		LOAD_SEGREG(CPU_CS_INDEX, (UINT16)new_cs);
+		CPU_EIP = new_ip;
+
+		set_eflags(new_flags, mask);
+		CPU_CLEAR_PREV_ESP();
+	}
+	else {
+		/* Protected mode */
+		IRET_pm();
+	}
+	CPU_INST_OP32 = op32bak;
+	IRQCHECKTERM();
+
+#if 0
+	// Emulate system call on MS-DOS Player
+	if (IRET_TOP <= CPU_PREV_PC && CPU_PREV_PC < (IRET_TOP + IRET_SIZE)) {
+#ifdef USE_DEBUGGER
+		// Disallow reentering CPU_EXECUTE() in msdos_syscall()
+		msdos_int_num = (CPU_PREV_PC - IRET_TOP);
+#else
+		// Call msdos_syscall() here for better processing speed
+		msdos_syscall(CPU_PREV_PC - IRET_TOP);
+#endif
+	}
+#endif
 }
 
 #endif
