@@ -25,9 +25,6 @@
 #include "dyn_fpu.h"
 #include <stddef.h>
 
-bool CPU_PUSHF(Bitu prm_0) {
-}
-
 /*
 	The function CreateCacheBlock translates the instruction stream
 	until either an unhandled instruction is found, the maximum

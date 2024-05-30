@@ -2808,7 +2808,7 @@ UINT64 exec_jit() {
 				cpu_cycles_count_t old_cycles = CPU_Cycles;
 				CPU_Cycles = 1;
 				CPU_CycleLeft += old_cycles;
-				exec_1step();
+				exec_allstep();
 				Bits nc_retcode = 0;//CPU_Core_Normal_Run();
 				if (!nc_retcode) {
 					CPU_Cycles = old_cycles - 1;
@@ -3920,5 +3920,184 @@ void CPU_IRET(bool use32, uint32_t oldeip) {
 	}
 #endif
 }
+
+void CPU_Exception(Bitu which, Bitu error) {
+	EXCEPTION(which, error);
+}
+
+bool CPU_READ_CRX(Bitu cr, uint32_t& retvalue) {
+	CPU_WORKCLOCK(11);
+	if (CPU_STAT_PM && (CPU_STAT_VM86 || CPU_STAT_CPL != 0)) {
+		VERBOSE(("MOV_RdCd: VM86(%s) or CPL(%d) != 0", CPU_STAT_VM86 ? "true" : "false", CPU_STAT_CPL));
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+
+	switch (cr) {
+	case 0:
+		retvalue = CPU_CR0;
+		break;
+
+	case 2:
+		retvalue = CPU_CR2;
+		break;
+
+	case 3:
+		retvalue = CPU_CR3;
+		break;
+
+	case 4:
+		retvalue = CPU_CR4;
+		break;
+
+	default:
+		ia32_panic("MOV_RdCd: CR reg index (%d)", cr);
+		/*NOTREACHED*/
+		return true;
+		break;
+	}
+	VERBOSE(("MOV_RdCd: %04x:%08x: cr%d: 0x%08x -> %s", CPU_CS, CPU_PREV_EIP, idx, *out, reg32_str[op & 7]));
+	return false;
+}
+
+bool CPU_PrepareException(Bitu which, Bitu error) {
+	EXCEPTION(which, error);
+	return true;
+}
+
+Bitu PIC_IRQCheck;
+
+bool CPU_SetSegGeneral(SegNames seg, uint16_t value) {
+	if ((seg != CPU_CS_INDEX || i386cpuid.allow_movCS) && seg < CPU_SEGREG_NUM) {
+		if (!CPU_STAT_PM || CPU_STAT_VM86) {
+			CPU_STATSAVE.cpu_regs.sreg[seg] = value;
+			CPU_STATSAVE.cpu_stat.sreg[seg].u.seg.segbase = value << 4;
+			return false;
+		}
+		else {
+			LOAD_SEGREG(seg, (UINT16)value);
+			if (seg == CPU_SS_INDEX) {
+				exec_1step();
+				return true;
+			}
+			return false;
+		}
+	}
+	EXCEPTION(UD_EXCEPTION, 0);
+	return true;
+}
+
+void MEM_SetPageHandler(Bitu phys_page, Bitu pages, PageHandler* handler) {
+	for (; pages > 0; pages--) {
+		//memory.phandlers[phys_page] = handler;
+		phys_page++;
+	}
+}
+
+bool CPU_PopSeg(SegNames seg, bool use32) {
+	UINT32 src;
+
+	if (!use32) {
+		//16bit
+		CPU_WORKCLOCK(5);
+
+		CPU_SET_PREV_ESP();
+		POP0_16(src);
+		LOAD_SEGREG(seg, (UINT16)src);
+		CPU_CLEAR_PREV_ESP();
+	}
+	else {
+		//32bit
+		CPU_WORKCLOCK(5);
+
+		CPU_SET_PREV_ESP();
+		POP0_32(src);
+		LOAD_SEGREG(seg, (UINT16)src);
+		CPU_CLEAR_PREV_ESP();
+	}
+	if (seg == CPU_SS_INDEX) {
+		exec_1step();
+		return true;
+	}
+	return true;
+}
+
+bool CPU_PUSHF(Bitu use32) {
+	if (!use32) {
+		//16bit
+		CPU_WORKCLOCK(3);
+		if (!CPU_STAT_PM || !CPU_STAT_VM86 || (CPU_STAT_IOPL == CPU_IOPL3)) {
+			UINT16 flags = REAL_FLAGREG;
+			flags = (flags & ALL_FLAG) | 2;
+			PUSH0_16(flags);
+			return false;
+		}
+		/* VM86 && IOPL != 3 */
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+	}
+	else {
+		//32bit
+		CPU_WORKCLOCK(3);
+		if (!CPU_STAT_PM || !CPU_STAT_VM86 || (CPU_STAT_IOPL == CPU_IOPL3)) {
+			UINT32 flags = REAL_EFLAGREG & ~(RF_FLAG | VM_FLAG);
+			flags = (flags & ALL_EFLAG) | 2;
+			PUSH0_32(flags);
+			return false;
+		}
+		/* VM86 && IOPL != 3 */
+#if defined(USE_VME)
+		if (CPU_CR4 & CPU_CR4_VME) {
+			if (CPU_EFLAG & VIP_FLAG) {
+				EXCEPTION(GP_EXCEPTION, 0);
+				return true;
+			}
+			else {
+				UINT32 flags = REAL_EFLAGREG & ~(RF_FLAG | VM_FLAG);
+				flags = (flags & ALL_EFLAG) | 2;
+				flags = (flags & ~I_FLAG) | ((flags & VIF_FLAG) >> 10); // VIF → IFにコピー
+				flags |= IOPL_FLAG; // IOPL == 3 の振りをする
+				PUSH0_32(flags);
+				return false;
+			}
+		}
+		else {
+			EXCEPTION(GP_EXCEPTION, 0);
+			return true;
+		}
+#else
+		EXCEPTION(GP_EXCEPTION, 0);
+		return true;
+#endif
+	}
+	return false;
+}
+
+Bitu MEM_TotalPages(void) {
+	return 0;
+}
+HostPt MemBase = NULL;
+
+bool dos_kernel_disabled;
+
+PageHandler* MEM_GetPageHandler(Bitu phys_page) {
+	return 0;
+}
+
+void DOSBOX_RunMachine(void) {
+	return;
+}
+
+void DEBUG_ShowMsg(char const* format, ...) {
+	return;
+}
+
+int CPU_IsDynamicCore(void) {
+	return 2;
+}
+
+CPUBlock cpu;
+unsigned char CPU_ArchitectureType;
+CPU_Decoder* cpudecoder;
 
 #endif

@@ -56,8 +56,10 @@
 #define FPH_ARCHTYPE_EXPERIMENTAL		0xff
 
 /* CPU Cycle Timing */
-extern cpu_cycles_count_t CPU_Cycles;
-extern cpu_cycles_count_t CPU_CycleLeft;
+/*extern cpu_cycles_count_t CPU_Cycles;
+extern cpu_cycles_count_t CPU_CycleLeft;*/
+#define CPU_Cycles CPU_CLOCK
+#define CPU_CycleLeft CPU_REMCLOCK
 extern cpu_cycles_count_t CPU_CycleMax;
 extern cpu_cycles_count_t CPU_OldCycleMax;
 extern cpu_cycles_count_t CPU_CyclePercUsed;
@@ -485,6 +487,7 @@ protected:
     Bitu table_limit;
 };
 
+#if 0
 class GDTDescriptorTable : public DescriptorTable {
 public:
 	bool GetDescriptor(Bitu selector, Descriptor& desc) {
@@ -553,6 +556,7 @@ public:
 		else saved.seg.type&=(~2U); /* -Wconversion cannot silence without hard-coding ~2U & 0x1F */
 	}
 };
+#endif
 
 
 struct CPUBlock {
@@ -561,8 +565,8 @@ struct CPUBlock {
 	Bitu cr0;
 	Bitu cr4;
 	bool pmode;							/* Is Protected mode enabled */
-	GDTDescriptorTable gdt;
-	DescriptorTable idt;
+	//GDTDescriptorTable gdt;
+	//DescriptorTable idt;
 	struct {
 		Bitu eflags;
 	} masks;
