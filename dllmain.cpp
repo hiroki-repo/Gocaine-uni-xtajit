@@ -491,6 +491,7 @@ typedef void t_CPU_BUS_SIZE_CHANGE(int);
 typedef void t_CPU_SWITCH_PM(bool);
 typedef void* t_GET_CPU_exec_1step();
 typedef void t_exec_1step();
+typedef UINT32 t_CPU_EXECUTE_INJIT();
 
 extern class memaccessandpt;
 
@@ -508,6 +509,7 @@ struct {
 	t_CPU_BUS_SIZE_CHANGE* CPU_BUS_SIZE_CHANGE = 0;
 	t_CPU_SWITCH_PM* CPU_SWITCH_PM = 0;
 	//t_GET_CPU_exec_1step* GET_CPU_exec_1step = 0;
+	t_CPU_EXECUTE_INJIT* CPU_EXECUTE_INJIT = 0;
 	bool notfirsttime = false;
 	memaccessandpt* memtmp;
 	char* funcofmemaccess;
@@ -600,6 +602,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			emusemaphore[i].CPU_BUS_SIZE_CHANGE = (t_CPU_BUS_SIZE_CHANGE*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_BUS_SIZE_CHANGE");
 			emusemaphore[i].CPU_SWITCH_PM = (t_CPU_SWITCH_PM*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_SWITCH_PM");
 			emusemaphore[i].exec_1step = (t_exec_1step*)(((t_GET_CPU_exec_1step*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"GET_CPU_exec_1step"))());
+			emusemaphore[i].CPU_EXECUTE_INJIT = (t_CPU_EXECUTE_INJIT*)ULGetProcAddress((char*)emusemaphore[i].np21w, (char*)"CPU_EXECUTE_INJIT");
 			emusemaphore[i].notfirsttime = false;
 			emusemaphore[i].funcofmemaccess = 0;
 		}
@@ -1058,7 +1061,7 @@ public:
 				}*/
 				_this->wow64svctype = 1;
 				_this->i386finish = true;
-				//_this->i386core->s.remainclock = 0;
+				_this->i386core->s.remainclock = 0;
 			}
 			else if (prm_0 == 4) {
 				/*UINT32* p = (UINT32*)ULongToPtr(_this->i386_context->Esp);
@@ -1069,7 +1072,7 @@ public:
 				}*/
 				_this->wow64svctype = 2;
 				_this->i386finish = true;
-				//_this->i386core->s.remainclock = 0;
+				_this->i386core->s.remainclock = 0;
 			}
 			else if (prm_0 == 0xe5) {
 				Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
@@ -1126,6 +1129,7 @@ extern "C" {
 		t_CPU_SWITCH_PM* CPU_SWITCH_PM = 0;
 		//t_GET_CPU_exec_1step* GET_CPU_exec_1step = 0;
 		t_exec_1step* exec_1step = 0;
+		t_CPU_EXECUTE_INJIT* CPU_EXECUTE_INJIT = 0;
 
 		I386_CONTEXT* wow_context;
 		NTSTATUS ret;
@@ -1163,6 +1167,7 @@ extern "C" {
 				CPU_SWITCH_PM = emusemaphore[EMU_ID].CPU_SWITCH_PM;
 				//GET_CPU_exec_1step = emusemaphore[EMU_ID].GET_CPU_exec_1step;
 				exec_1step = emusemaphore[EMU_ID].exec_1step;
+				CPU_EXECUTE_INJIT = emusemaphore[EMU_ID].CPU_EXECUTE_INJIT;
 				if (emusemaphore[EMU_ID].notfirsttime == false) {
 					CPU_INIT();
 					CPU_RESET();
@@ -1183,6 +1188,7 @@ extern "C" {
 				CPU_RESET = (t_CPU_RESET*)ULGetProcAddress((char*)HM, (char*)"CPU_RESET");
 				CPU_BUS_SIZE_CHANGE = (t_CPU_BUS_SIZE_CHANGE*)ULGetProcAddress((char*)HM, (char*)"CPU_BUS_SIZE_CHANGE");
 				CPU_SWITCH_PM = (t_CPU_SWITCH_PM*)ULGetProcAddress((char*)HM, (char*)"CPU_SWITCH_PM");
+				CPU_EXECUTE_INJIT = (t_CPU_EXECUTE_INJIT*)ULGetProcAddress((char*)HM, (char*)"CPU_EXECUTE_INJIT");
 				CPU_INIT();
 				CPU_RESET();
 				CPU_BUS_SIZE_CHANGE(0x202);
@@ -1293,7 +1299,9 @@ extern "C" {
 			}
 		}
 		memtmp->i386finish = false;
-		while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
+		//while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
+		//printf("%08X08X\n", (((UINT64)&CPU_EXECUTE_INJIT) >> (32 * 1)), (((UINT64)&CPU_EXECUTE_INJIT) >> (32 * 0)));
+		while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { CPU_EXECUTE_INJIT(); exec_1step(); } }
 		//memtmp->setntc(wow_context);
 		UINT8 svctype = memtmp->wow64svctype;
 		if (EMU_ID != -1) {

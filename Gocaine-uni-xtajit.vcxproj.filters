@@ -164,5 +164,14 @@
     <ClCompile Include="np21_i386c\ia32\instructions\sse4a\sse4a.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="np21_i386c\ia32\jit.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="np21_i386c\ia32\dynrec\paging_dosbox.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="np21_i386c\ia32\dynrec\flags_dosbox.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
