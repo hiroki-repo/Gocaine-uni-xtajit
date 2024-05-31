@@ -1270,6 +1270,6 @@ __declspec(dllexport) void CPU_EXECUTE_BY_NUM_OF_INSTS(UINT32 noi4prm_0) {
 #include "np21_i386c/ia32/jit.h"
 //extern UINT32 exec_jit();
 
-extern "C" __declspec(dllexport) UINT32 CPU_EXECUTE_INJIT() {
+extern "C" __declspec(dllexport) UINT64 CPU_EXECUTE_INJIT() {
 	return exec_jit();
 }

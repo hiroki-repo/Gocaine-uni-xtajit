@@ -252,6 +252,51 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 
 #pragma warning(disable:4996)
 
+typedef WINBASEAPI
+LPVOID
+WINAPI
+t_VirtualAlloc(
+	_In_opt_ LPVOID lpAddress,
+	_In_     SIZE_T dwSize,
+	_In_     DWORD flAllocationType,
+	_In_     DWORD flProtect
+);
+typedef WINBASEAPI
+BOOL
+WINAPI
+t_VirtualFree(
+	_Pre_notnull_ _When_(dwFreeType == MEM_DECOMMIT, _Post_invalid_) _When_(dwFreeType == MEM_RELEASE, _Post_ptr_invalid_) LPVOID lpAddress,
+	_In_ SIZE_T dwSize,
+	_In_ DWORD dwFreeType
+);
+struct t_Virtualallocandfree {
+	t_VirtualAlloc* _VirtualAlloc;
+	t_VirtualFree* _VirtualFree;
+};
+
+typedef t_Virtualallocandfree* t_getVirtualallocandfree();
+
+extern char modulename4this[4096];
+typedef NTSYSAPI NTSTATUS  WINAPI t_LdrLoadDll(LPCWSTR, DWORD, const UNICODE_STRING*, HMODULE*);
+t_LdrLoadDll* LdrLoadDll = 0;
+
+bool jit_enabled = false;
+
+static HMODULE load_64bit_module(const char* name) {
+	NTSTATUS status;
+	HMODULE module;
+	UNICODE_STRING str;
+	WCHAR path[MAX_PATH];
+	WCHAR namex[MAX_PATH];
+	WCHAR dir[MAX_PATH];
+	mbstowcs((wchar_t*)&dir,(const char*)&modulename4this, MAX_PATH);
+	mbstowcs((wchar_t*)&namex, (const char*)&name, MAX_PATH);
+	swprintf(path, MAX_PATH, L"%s\\%s", dir, namex);
+	RtlInitUnicodeString(&str,path);
+	if ((status = LdrLoadDll(dir, 0, &str, &module))) {}
+	return module;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -377,6 +422,7 @@ extern "C" {
 								if (p) { *++p = 0; }
 								strncat(fname64bit, ((char*)(buff4pe + (*(UINT32*)(buff4pe + (*(UINT32*)(&buff0[0x80])) + (cnt * 20) + 12)))), strlen(((char*)(buff4pe + (*(UINT32*)(buff4pe + (*(UINT32*)(&buff0[0x80])) + (cnt * 20) + 12))))));
 								HM = LoadLibraryA(fname64bit);
+								if (HM == 0) { HM = load_64bit_module(fname64bit); }
 							}
 						}
 						if (HM == 0) {
@@ -413,6 +459,7 @@ extern "C" {
 								if (p) { *++p = 0; }
 								strncat(fname64bit, ((char*)(buff4pe + (*(UINT32*)(buff4pe + (*(UINT32*)(&buff0[0x90])) + (cnt * 20) + 12)))), strlen(((char*)(buff4pe + (*(UINT32*)(buff4pe + (*(UINT32*)(&buff0[0x90])) + (cnt * 20) + 12))))));
 								HM = LoadLibraryA(fname64bit);
+								if (HM == 0) { HM = load_64bit_module(fname64bit); }
 							}
 						}
 						if (HM == 0) {
@@ -491,7 +538,7 @@ typedef void t_CPU_BUS_SIZE_CHANGE(int);
 typedef void t_CPU_SWITCH_PM(bool);
 typedef void* t_GET_CPU_exec_1step();
 typedef void t_exec_1step();
-typedef UINT32 t_CPU_EXECUTE_INJIT();
+typedef UINT64 t_CPU_EXECUTE_INJIT();
 
 extern class memaccessandpt;
 
@@ -573,6 +620,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		hmhm4dll = hModule;
 		hofntdll = LoadLibraryA("C:\\Windows\\System32\\ntdll.dll");
 		if (hofntdll == 0) { return false; }
+		LdrLoadDll = (t_LdrLoadDll*)GetProcAddress(hofntdll, "LdrLoadDll");
 		LdrDisableThreadCalloutsForDll = (t_LdrDisableThreadCalloutsForDll*)GetProcAddress(hofntdll, "LdrDisableThreadCalloutsForDll");
 		if (LdrDisableThreadCalloutsForDll == 0) { return false; }
 		RtlAllocateHeap = (t_RtlAllocateHeap*)GetProcAddress(hofntdll, "RtlAllocateHeap");
@@ -591,6 +639,21 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		if (!p__wine_unix_call) {
 			p__wine_unix_call = (t__wine_unix_call*)GetProcAddress(hofntdll, "__wine_unix_call");
 		}
+#if 0
+		emusemaphore[0].inuse = false;
+		emusemaphore[0].np21w = hModule;
+		emusemaphore[0].CPU_GET_REGPTR = (t_CPU_GET_REGPTR*)GetProcAddress(hModule, (char*)"CPU_GET_REGPTR");
+		//emusemaphore[0].CPU_EXECUTE_CC = (t_CPU_EXECUTE_CC*)GetProcAddress(hModule, (char*)"CPU_EXECUTE_CC_V2");
+		emusemaphore[0].CPU_SET_MACTLFC = (t_CPU_SET_MACTLFC*)GetProcAddress(hModule, (char*)"CPU_SET_MACTLFC");
+		emusemaphore[0].CPU_INIT = (t_CPU_INIT*)GetProcAddress(hModule, (char*)"CPU_INIT");
+		emusemaphore[0].CPU_RESET = (t_CPU_RESET*)GetProcAddress(hModule, (char*)"CPU_RESET");
+		emusemaphore[0].CPU_BUS_SIZE_CHANGE = (t_CPU_BUS_SIZE_CHANGE*)GetProcAddress(hModule, (char*)"CPU_BUS_SIZE_CHANGE");
+		emusemaphore[0].CPU_SWITCH_PM = (t_CPU_SWITCH_PM*)GetProcAddress(hModule, (char*)"CPU_SWITCH_PM");
+		emusemaphore[0].exec_1step = (t_exec_1step*)(((t_GET_CPU_exec_1step*)GetProcAddress(hModule, (char*)"GET_CPU_exec_1step"))());
+		emusemaphore[0].CPU_EXECUTE_INJIT = (t_CPU_EXECUTE_INJIT*)GetProcAddress(hModule, (char*)"CPU_EXECUTE_INJIT");
+		emusemaphore[0].notfirsttime = false;
+		emusemaphore[0].funcofmemaccess = 0;
+#endif
 		for (int i = 0; i < EMU_ID_MAX; i++) {
 			emusemaphore[i].inuse = false;
 			emusemaphore[i].np21w = ULLoadLibraryA((char*)modulename4this);
@@ -1028,7 +1091,7 @@ public:
 			(*(XSAVE_FORMAT*)(ctx->ExtendedRegisters)).XmmRegisters[i].High = (this->i386core->s.fpu_stat.xmm_reg[i].ul64[1]);
 		}
 	}
-	static UINT32 i386memaccess(memaccessandpt* _this, int prm_0, int prm_1, int prm_2) {
+	static UINT32 i386memaccess(memaccessandpt* _this, UINT32 prm_0, UINT32 prm_1, UINT32 prm_2) {
 		switch (prm_2 & 0xff) {
 		case 0x00:
 			(*(UINT8*)(prm_0)) = prm_1;
@@ -1054,25 +1117,31 @@ public:
 			UINT32 ret = 0;
 			_this->setntc(_this->i386_context);
 			if (prm_0 == 0) {
-				/*if (Wow64SystemServiceEx != 0) {
+#if 0
+				if (Wow64SystemServiceEx != 0) {
 					ret = Wow64SystemServiceEx(_this->i386_context->Eax, (UINT*)ULongToPtr(_this->i386_context->Esp + 8));
 					_this->i386finish = true;
 					_this->i386core->s.remainclock = 0;
-				}*/
+				}
+#else
 				_this->wow64svctype = 1;
 				_this->i386finish = true;
 				_this->i386core->s.remainclock = 0;
+#endif
 			}
 			else if (prm_0 == 4) {
-				/*UINT32* p = (UINT32*)ULongToPtr(_this->i386_context->Esp);
+#if 0
+				UINT32* p = (UINT32*)ULongToPtr(_this->i386_context->Esp);
 				if (p__wine_unix_call != 0) {
 					ret = p__wine_unix_call((*(UINT64*)((void*)&p[1])), (UINT32)p[3], ULongToPtr(p[4]));
 					_this->i386finish = true;
 					_this->i386core->s.remainclock = 0;
-				}*/
+				}
+#else
 				_this->wow64svctype = 2;
 				_this->i386finish = true;
 				_this->i386core->s.remainclock = 0;
+#endif
 			}
 			else if (prm_0 == 0xe5) {
 				Param = (DWORD*)_this->i386core->s.cpu_regs.reg[CPU_EAX_INDEX].d;
@@ -1301,8 +1370,15 @@ extern "C" {
 		memtmp->i386finish = false;
 		//while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
 		//printf("%08X08X\n", (((UINT64)&CPU_EXECUTE_INJIT) >> (32 * 1)), (((UINT64)&CPU_EXECUTE_INJIT) >> (32 * 0)));
-		while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { CPU_EXECUTE_INJIT(); exec_1step(); } }
+		//while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { CPU_EXECUTE_INJIT(); } }
 		//memtmp->setntc(wow_context);
+		//while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 200000000; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
+		if (jit_enabled == false) {
+			while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { exec_1step(); } }
+		}
+		else {
+			while (memtmp->i386finish == false) { memtmp->i386core->s.remainclock = 0x7fffffff; while ((memtmp->i386finish == false) && ((memtmp->i386core->s.remainclock) > 0)) { CPU_EXECUTE_INJIT(); } }
+		}
 		UINT8 svctype = memtmp->wow64svctype;
 		if (EMU_ID != -1) {
 			emusemaphore[EMU_ID].inuse = false;
@@ -1329,8 +1405,9 @@ extern "C" {
 		return;
 	}
 	__declspec(dllexport) void* WINAPI __wine_get_unix_opcode(void) { return (UINT32*)&unixbopcode; }
-	__declspec(dllexport) BOOLEAN WINAPI BTCpuIsProcessorFeaturePresent(UINT feature) { if (feature == 1 || feature == 2 || feature == 3 || feature == 6 || feature == 7 || feature == 8 || feature == 10 || feature == 13) { return true; }return false; }
+	__declspec(dllexport) BOOLEAN WINAPI BTCpuIsProcessorFeaturePresent(UINT feature) { if (feature == 2 || feature == 3 || feature == 6 || feature == 7 || feature == 8 || feature == 10 || feature == 13 || feature == 17 || feature == 36 || feature == 37 || feature == 38) { return true; } return false; }
 	__declspec(dllexport) NTSTATUS WINAPI BTCpuTurboThunkControl(ULONG enable) { if (enable) { return STATUS_NOT_SUPPORTED; } return STATUS_SUCCESS; }
+	__declspec(dllexport) VOID WINAPI BTCpuEnableJIT(BOOL enable) { jit_enabled = enable; }
 
 #ifdef __cplusplus
 }
