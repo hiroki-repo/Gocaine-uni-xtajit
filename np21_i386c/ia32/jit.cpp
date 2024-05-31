@@ -2738,7 +2738,15 @@ void FillFlagsNoCFOF(void) {
 }*/
 #endif
 
-UINT64 exec_jit() {
+PageHandler* jitcache[1024*1024];
+PageHandler nojittedtemp;
+
+UINT64 exec_jit_internal() {
+	if (cache_initialized == false) {
+		//exec_allstep();
+		cache_init(true);
+		return 0;
+	}
 	if (CPU_Cycles <= 0)
 		return CBRET_NONE;
 
@@ -2762,7 +2770,7 @@ UINT64 exec_jit() {
 	 * with the idea that it works. This code cannot handle
 	 * the sudden context switch of a page fault and it never
 	 * will. Don't do it. You have been warned. */
-	if (paging.enabled && !use_dynamic_core_with_paging) {
+	if (CPU_STAT_PAGING && !use_dynamic_core_with_paging) {
 		if (paging_warning) {
 			LOG_MSG("Dynamic core warning: The guest OS/Application has just switched on 80386 paging, which is not supported by the dynamic core. The normal core will be used until paging is switched off again.");
 			paging_warning = false;
@@ -2781,17 +2789,26 @@ UINT64 exec_jit() {
 #endif
 
 		CodePageHandlerDynRec* chandler = nullptr;
+#if 1
+		if (jitcache[(ip_point >> 12)] == 0 || jitcache[(ip_point >> 12)] == (&nojittedtemp)) {
+			jitcache[(ip_point >> 12)] = (PageHandler*)new CodePageHandlerDynRec();
+			((CodePageHandlerDynRec*)jitcache[(ip_point >> 12)])->SetupAt((ip_point >> 12), &nojittedtemp);
+		}
+
+		chandler = (CodePageHandlerDynRec*)jitcache[(ip_point >> 12)];
+#else
 		// see if the current page is present and contains code
 		if (GCC_UNLIKELY(MakeCodePage(ip_point, chandler))) {
 			// page not present, throw the exception
 			CPU_Exception(cpu.exception.which, cpu.exception.error);
 			continue;
 		}
+#endif
 
 		// page doesn't contain code or is special
 		if (GCC_UNLIKELY(!chandler)) {
 			dosbox_allow_nonrecursive_page_fault = true;
-			exec_1step();
+			exec_allstep();
 			return CBRET_NONE;
 		}
 
@@ -3992,6 +4009,7 @@ bool CPU_SetSegGeneral(SegNames seg, uint16_t value) {
 void MEM_SetPageHandler(Bitu phys_page, Bitu pages, PageHandler* handler) {
 	for (; pages > 0; pages--) {
 		//memory.phandlers[phys_page] = handler;
+		jitcache[phys_page] = (PageHandler*)handler;
 		phys_page++;
 	}
 }
@@ -4083,7 +4101,7 @@ HostPt MemBase = NULL;
 bool dos_kernel_disabled;
 
 PageHandler* MEM_GetPageHandler(Bitu phys_page) {
-	return 0;
+	return (PageHandler*)jitcache[phys_page];
 }
 
 void DOSBOX_RunMachine(void) {
@@ -4101,5 +4119,11 @@ int CPU_IsDynamicCore(void) {
 CPUBlock cpu;
 unsigned char CPU_ArchitectureType;
 CPU_Decoder* cpudecoder;
+
+UINT64 exec_jit() {
+	UINT64 ret = exec_jit_internal();
+	exec_1step();
+	return ret;
+}
 
 #endif

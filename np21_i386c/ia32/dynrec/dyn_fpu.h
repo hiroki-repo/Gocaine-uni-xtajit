@@ -60,7 +60,7 @@ static void FPU_FFREE(Bitu st) {
 #else
 //#include "../../fpu/fpu_instructions.h"
 //#include "../instructions/fpu/fpemul_softfloat.cpp"
-#include "../instructions/fpu/fpemul_softfloat.h"
+//#include "../instructions/fpu/fpemul_softfloat.h"
 
 #include <float.h>
 #include <math.h>
