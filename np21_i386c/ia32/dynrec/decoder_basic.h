@@ -725,66 +725,78 @@ static void dyn_check_trapflag(void) {
 
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
-	HostPt tlb_addr=get_tlb_read(address);
+	/*HostPt tlb_addr=get_tlb_read(address);
 	if (tlb_addr) {
 		*((uint8_t*)(&core_dynrec.readdata))=host_readb(tlb_addr+address);
 		return false;
 	} else {
 		return get_tlb_readhandler(address)->readb_checked(address, (uint8_t*)(&core_dynrec.readdata));
-	}
+	}*/
+	*((uint8_t*)(&core_dynrec.readdata)) = cpu_vmemoryread_b(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)));
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,uint8_t val) DRC_FC;
 bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,uint8_t val) {
-	HostPt tlb_addr=get_tlb_write(address);
+	/*HostPt tlb_addr=get_tlb_write(address);
 	if (tlb_addr) {
 		host_writeb(tlb_addr+address,val);
 		return false;
-	} else return get_tlb_writehandler(address)->writeb_checked(address,val);
+	} else return get_tlb_writehandler(address)->writeb_checked(address,val);*/
+	cpu_vmemorywrite_b(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)), val);
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
-	if ((address & 0xfff)<0xfff) {
+	/*if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) {
 			*((uint16_t*)(&core_dynrec.readdata))=host_readw(tlb_addr+address);
 			return false;
 		} else return get_tlb_readhandler(address)->readw_checked(address, (uint16_t*)(&core_dynrec.readdata));
-	} else return mem_unalignedreadw_checked(address, ((uint16_t*)(&core_dynrec.readdata)));
+	} else return mem_unalignedreadw_checked(address, ((uint16_t*)(&core_dynrec.readdata)));*/
+	*((uint16_t*)(&core_dynrec.readdata)) = cpu_vmemoryread_w(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)));
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
-	if ((address & 0xfff)<0xffd) {
+	/*if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) {
 			*((uint32_t*)(&core_dynrec.readdata))=host_readd(tlb_addr+address);
 			return false;
 		} else return get_tlb_readhandler(address)->readd_checked(address, (uint32_t*)(&core_dynrec.readdata));
-	} else return mem_unalignedreadd_checked(address, ((uint32_t*)(&core_dynrec.readdata)));
+	} else return mem_unalignedreadd_checked(address, ((uint32_t*)(&core_dynrec.readdata)));*/
+	*((uint32_t*)(&core_dynrec.readdata)) = cpu_vmemoryread_d(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)));
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,uint16_t val) DRC_FC;
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,uint16_t val) {
-	if ((address & 0xfff)<0xfff) {
+	/*if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) {
 			host_writew(tlb_addr+address,val);
 			return false;
 		} else return get_tlb_writehandler(address)->writew_checked(address,val);
-	} else return mem_unalignedwritew_checked(address,val);
+	} else return mem_unalignedwritew_checked(address,val);*/
+	cpu_vmemorywrite_w(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)), val);
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,uint32_t val) DRC_FC;
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,uint32_t val) {
-	if ((address & 0xfff)<0xffd) {
+	/*if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) {
 			host_writed(tlb_addr+address,val);
 			return false;
 		} else return get_tlb_writehandler(address)->writed_checked(address,val);
-	} else return mem_unalignedwrited_checked(address,val);
+	} else return mem_unalignedwrited_checked(address,val);*/
+	cpu_vmemorywrite_d(CPU_INST_SEGREG_INDEX, (address - (CPU_STAT_SREG(CPU_INST_SEGREG_INDEX).u.seg.segbase)), val);
+	return (CPU_STAT_EXCEPTION_COUNTER >= 1) ? true : false;
 }
 
 
