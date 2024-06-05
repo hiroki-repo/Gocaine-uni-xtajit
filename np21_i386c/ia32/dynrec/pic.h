@@ -23,8 +23,9 @@
 
 /* CPU Cycle Timing */
 /*extern cpu_cycles_count_t CPU_Cycles;
-extern cpu_cycles_count_t CPU_CycleLeft;*/
-extern cpu_cycles_count_t CPU_CycleMax;
+extern cpu_cycles_count_t CPU_CycleLeft;
+extern cpu_cycles_count_t CPU_CycleMax;*/
+extern cpu_cycles_count_t CPU_CycleLeft;
 
 typedef void (PIC_EOIHandler) (void);
 typedef void (* PIC_EventHandler)(Bitu val);

@@ -57,10 +57,11 @@
 
 /* CPU Cycle Timing */
 /*extern cpu_cycles_count_t CPU_Cycles;
-extern cpu_cycles_count_t CPU_CycleLeft;*/
-#define CPU_Cycles CPU_CLOCK
-#define CPU_CycleLeft CPU_REMCLOCK
-extern cpu_cycles_count_t CPU_CycleMax;
+extern cpu_cycles_count_t CPU_CycleLeft;
+extern cpu_cycles_count_t CPU_CycleMax;*/
+#define CPU_Cycles CPU_REMCLOCK
+extern cpu_cycles_count_t CPU_CycleLeft;
+#define CPU_CycleMax CPU_CLOCK
 extern cpu_cycles_count_t CPU_OldCycleMax;
 extern cpu_cycles_count_t CPU_CyclePercUsed;
 extern cpu_cycles_count_t CPU_CycleLimit;

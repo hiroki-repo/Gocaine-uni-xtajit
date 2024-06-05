@@ -101,6 +101,8 @@
 #include "dynrec/lazyflags.h"
 #include "dynrec/pic.h"
 
+cpu_cycles_count_t CPU_CycleLeft = 0;
+
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
 #define CACHE_PAGES		(512)
@@ -4121,7 +4123,9 @@ unsigned char CPU_ArchitectureType;
 CPU_Decoder* cpudecoder;
 
 UINT64 exec_jit() {
+	CPU_CycleLeft = 0;
 	UINT64 ret = exec_jit_internal();
+	CPU_Cycles += CPU_CycleLeft;
 	exec_1step();
 	return ret;
 }
