@@ -1101,6 +1101,20 @@ public:
 			this->i386core->s.cpu_stat.sreg[CPU_FS_INDEX].u.seg.limit = 0xffffffff;
 			this->i386core->s.cpu_stat.sreg[CPU_GS_INDEX].u.seg.limit = 0xffffffff;
 
+			this->i386core->s.cpu_stat.sreg[CPU_ES_INDEX].u.seg.g = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_CS_INDEX].u.seg.g = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_SS_INDEX].u.seg.g = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_DS_INDEX].u.seg.g = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_FS_INDEX].u.seg.g = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_GS_INDEX].u.seg.g = 1;
+
+			this->i386core->s.cpu_stat.sreg[CPU_ES_INDEX].d = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_CS_INDEX].d = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_SS_INDEX].d = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_DS_INDEX].d = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_FS_INDEX].d = 1;
+			this->i386core->s.cpu_stat.sreg[CPU_GS_INDEX].d = 1;
+
 			this->i386core->s.cpu_stat.protected_mode = 1;
 			this->i386core->s.cpu_stat.ss_32 = 1;
 			this->i386core->s.cpu_inst.op_32 = 1;
